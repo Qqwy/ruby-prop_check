@@ -14,6 +14,11 @@ class LazyProxy < BasicObject
     @res
   end
 
+  def __reevaluate__
+    @evaluated = false
+    __evaluate__
+  end
+
   def method_missing(method, *args, &block)
     __evaluate__
     # ::Kernel.puts "Call to `#{method}(#{args.map(&:inspect).join(', ')})` was proxied"
@@ -43,6 +48,12 @@ class Property
     integer_between(-@size..@size)
   end
 
+  def nonnegative_integer
+    LazyProxy.new do
+      integer.abs
+    end
+  end
+
   private def fraction(a, b, c)
     a.to_f + (b.to_f / (c.to_f.abs) + 1.0)
   end
@@ -50,6 +61,27 @@ class Property
   def float
     LazyProxy.new do
       fraction(integer, integer, integer)
+    end
+  end
+
+  def char
+    LazyProxy.new do
+      integer_between(32..255).chr
+    end
+  end
+
+  def array(elem)
+    LazyProxy.new do
+      len = nonnegative_integer
+      (0..len).map do
+        elem.__reevaluate__
+      end
+    end
+  end
+
+  def string
+    LazyProxy.new do
+      array(char).join
     end
   end
 
@@ -78,14 +110,14 @@ def check_property(&block)
   Property.new.check(&block)
 end
 
-def string
-  "foo"
-end
+# def string
+#   "foo"
+# end
 
 check_property do |x = resize(20, integer), y = float, z = string|
   puts x
   puts y
-  # puts z
+  puts z
 
   # puts x.class
   # puts y.class
