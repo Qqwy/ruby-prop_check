@@ -14,10 +14,14 @@ class LazyProxy < BasicObject
     @res
   end
 
-  def __reevaluate__
-    @evaluated = false
-    __evaluate__
+  def __clone__
+    ::LazyProxy.new(&@impl)
   end
+
+  # def __reevaluate__
+  #   @evaluated = false
+  #   __evaluate__
+  # end
 
   def method_missing(method, *args, &block)
     __evaluate__
@@ -55,7 +59,7 @@ class Property
   end
 
   private def fraction(a, b, c)
-    a.to_f + (b.to_f / (c.to_f.abs) + 1.0)
+    a.to_f + b.to_f / ((c.to_f.abs) + 1.0)
   end
 
   def float
@@ -66,7 +70,7 @@ class Property
 
   def char
     LazyProxy.new do
-      integer_between(32..255).chr
+      integer_between(32..128).chr
     end
   end
 
@@ -74,7 +78,7 @@ class Property
     LazyProxy.new do
       len = nonnegative_integer
       (0..len).map do
-        elem.__reevaluate__
+        elem.__clone__
       end
     end
   end
