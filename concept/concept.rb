@@ -268,4 +268,53 @@ class Baz
   end
 end
 
-Baz.new.call
+# Baz.new.call
+
+class PropertyCheckEvaluator
+  # A wrapper class that implements the 'Cloaker' concept
+  # which allows us to refer to variables set in 'bindings',
+  # while still being able to access things that are only in scope
+  # in the creator of '&block'.
+  #
+  # This allows us to bind the variables specified in `bindings`
+  # one way during checking and another way during shrinking.
+  def initialize(bindings, &block)
+    @caller = eval 'self', block.binding, __FILE__, __LINE__
+    @block = block
+    @bindings = bindings
+  end
+
+  def call
+    @bindings.each do |name, generator|
+      # puts "Defining #{name}"
+      define_method(name) { generator.call }
+    end
+    instance_exec(&@block)
+  end
+
+  def method_missing(method, *args, &block)
+    @caller.__send__(method, *args, &block)
+  end
+
+  def respond_to?(*args)
+    super || @caller.respond_to?(*args)
+  end
+end
+
+include GeneratorStuff
+
+def forall(**bindings, &block)
+
+  (1..1000).each do |size|
+    Generator.generator_size = size
+    PropertyCheckEvaluator.new(bindings, &block).call
+  end
+end
+
+forall x: resize(20, integer), y: nonnegative_integer, z: string do
+  puts x
+  puts y
+  puts z
+
+  x > y == z
+end
