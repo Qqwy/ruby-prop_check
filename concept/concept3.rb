@@ -217,7 +217,8 @@ def forall(**bindings, &block)
   rescue   Exception => problem
     puts "FAILURE #{n_successful} successful tests. Failed on:\n#{print_roots(generator_results.root)}"
     puts "Shrinking..."
-    shrink(generator_results, &block)
+    problem_result = shrink(generator_results, &block)
+    puts "Shrunken input: #{print_roots(problem_result)}"
   end
 end
 
@@ -247,13 +248,33 @@ def hash_of_trees2tree_of_hashes(hash_of_trees)
   # hres
 end
 
-def shrink(bindings, &block)
+def shrink(bindings_tree, &block)
   # res = hash_of_trees2tree_of_hashes(bindings)
   # p res.lazy.force
 
+  problem_child = bindings_tree
+  loop do
+    next_problem_child = shrink_step(problem_child, &block)
+    break if next_problem_child.nil?
 
+    problem_child = next_problem_child
+  end
+
+  problem_child.root
 
   # p res.children.first
+end
+
+def shrink_step(bindings_tree, &block)
+  bindings_tree.children.each do |child|
+    begin
+      PropertyCheckEvaluator.new(child.root, &block).call()
+    rescue Exception => problem
+      return child
+    end
+  end
+
+  return nil
 end
 
 include Generators
@@ -263,7 +284,7 @@ forall x: integer, y: nonnegative_integer, z: float do
   puts y
   puts z
 
-  if y == 10
+  if z == 0.0
     raise "Boom!"
   end
 
