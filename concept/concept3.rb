@@ -165,7 +165,7 @@ module Generators
   def tuple(*generators)
     # generators.map(&:bind).reduce do ||
     # end
-    generators.reduce(Generator.wrap([])) do |acc, generator|
+    generators.reverse.reduce(Generator.wrap([])) do |acc, generator|
       generator.bind do |val|
         acc.map { |x| x << val }
       end
@@ -228,7 +228,7 @@ def forall(**bindings, &block)
   n_successful = 0
   generator_results = nil
   begin
-    (1..10000).each do |size|
+    (1..1000).each do |size|
       generator_results = binding_generator.generate(size, rng)
       PropertyCheckEvaluator.new(generator_results.root, &block).call()
       n_successful += 1
@@ -295,9 +295,9 @@ forall x: integer, z: float, y: nonnegative_integer do
   # puts y
   # puts z
 
-  if y == 42
-    raise "Boom!"
-  end
+  # if y == 42
+  #   raise "Boom!"
+  # end
 
   x > y == z
 end
