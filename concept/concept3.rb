@@ -1,92 +1,163 @@
 require 'stringio'
 
+##
+# Helper functions that have no other place to live
 module Helper
-  def self.scanl(elem, &op)
+  ##
+  # Creates a (potentially lazy) Enumerator
+  # starting with `elem`
+  # with each consecutive element obtained
+  # by calling `operation` on the previous element.
+  #
+  # >> Helper.scanl(0, &:next).take(10).force
+  # => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  # >> Helper.scanl([0, 1]) { |curr, next_elem| [next_elem, curr + next_elem] }.map(&:first).take(10).force
+  # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+  def self.scanl(elem, &operation)
     Enumerator.new do |yielder|
       acc = elem
       loop do
         # p acc
         yielder << acc
-        acc = op.call(acc)
+        acc = operation.call(acc)
       end
     end.lazy
   end
 end
 
-
+##
+# A Rose tree with the root being eager,
+# and the children computed lazily, on demand.
 LazyTree = Struct.new(:root, :children) do
+  ##
+  # The children default to an empty lazy list.
   def children
     (self[:children] || [].lazy)
   end
 
-  # Maps `block` eagerly over `root` and lazily over `children`.
+  ##
+  # Maps `block` eagerly over `root` and lazily over `children`, returning a new LazyTree as result.
+  #
+  # >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).map(&:next)
+  # => LazyTree.new(2, [LazyTree.new(3, [LazyTree.new(4)]), LazyTree.new(5)]).map(&:next)
   def map(&block)
-    LazyTree.new(block.call(self.root), self.children.map { |child_tree| child_tree.map(&block) })
+    LazyTree.new(block.call(root), children.map { |child_tree| child_tree.map(&block) })
   end
 
+  ##
   # Turns a tree of trees
   # in a single flattened tree, with subtrees that are closer to the root
   # and the left subtree earlier in the list of children.
   def flatten
-    root_tree = self.root
+    root_tree = root
     root_root = root_tree.root
     root_children = root_tree.children
-    child_trees = self.children
+    child_trees = children
 
     LazyTree.new(root_root, [root_children, child_trees.map(&:flatten)].lazy.flat_map(&:lazy))
   end
 
-  # Combines a collection of trees together into one tree of a collection.
-  # TODO permutate children
-  def self.zip(collection_of_trees)
-    roots = collection_of_trees.map(&:root)
-    children = collection_of_trees.map(&:children).permutation
-    # puts "CHILDREN:"
-    # p children
-    LazyTree.new(roots, children)
-  end
-
-  # Turns a LazyTree in a long lazy enumerable.
+  ##
+  # Turns a LazyTree in a long lazy enumerable, with the root first followed by its children
+  # (and the first children's result before later children; i.e. a depth-first traversal.)
+  #
   # Be aware that this lazy enumerable is potentially infinite,
   # possibly uncountably so.
+  #
+  # >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).each.force
+  # => [1, 2, 3, 4]
   def each#(&block)
     res = [[self.root], self.children.flat_map(&:each)].lazy.flat_map(&:lazy)
     # res = res.map(&block) if block_given?
     res
   end
 
+  ##
+  # Fully evaluate the LazyTree into an eager array, with the root first followed by its children
+  # (and the first children's result before later children; i.e. a depth-first traversal.)
+  #
   # Be aware that calling this might make Ruby attempt to evaluate an infinite collection.
-  # It is mostly useful for debugging.
+  # Therefore, it is mostly useful for debugging; in production you probably want to use
+  # the other mechanisms this class provides..
+  #
+  # >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).to_a
+  # => [1, 2, 3, 4]
   def to_a
     each.force
   end
 end
 
+##
+# A `Generator` is a special kind of 'proc' that,
+# given a size an random number generator state,
+# will generate a (finite) LazyTree of output values:
+#
+# The root of this tree is the value to be used during testing,
+# and the children are 'smaller' values related to the root,
+# to be used during the shrinking phase.
 class Generator
+  @@default_size = 10
+  @@default_rng = Random.new
+
+  ##
+  # Being a special kind of Proc, a Generator wraps a block.
   def initialize(&block)
     @block = block
   end
 
-  def generate(size, rng)
+  ##
+  # Given a `size` (integer) and a random number generator state `rng`,
+  # generate a LazyTree.
+  def generate(size = @@default_size, rng = @@default_rng)
     @block.call(size, rng)
   end
 
-  def self.wrap(val)
-    Generator.new { |size, rng| LazyTree.new(val, []) }
+  ##
+  # Generates a value, and only return this value
+  # (drop information for shrinking)
+  #
+  # >> Generators.integer.call(1000, Random.new(42))
+  # => 126
+  def call(size = @@default_size, rng = @@default_rng)
+    generate(size, rng).root
   end
 
+  ##
+  # Creates a 'constant' generator that always returns the same value,
+  # regardless of `size` or `rng`.
+  #
+  # Keen readers may notice this as the Monadic 'pure'/'return' implementation for Generators.
+  #
+  # >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
+  # => [2, 79]
+  def self.wrap(val)
+    Generator.new { |_size, _rng| LazyTree.new(val, []) }
+  end
+
+  ##
+  # Create a generator whose implementation depends on the output of another generator.
+  # this allows us to compose multiple generators.
+  #
+  # Keen readers may notice this as the Monadic 'bind' (sometimes known as '>>=') implementation for Generators.
+  #
+  # >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
+  # => [2, 79]
   def bind(&generator_proc)
     Generator.new do |size, rng|
-      outer_result = self.generate(size, rng)
-      res = outer_result.map do |outer_val|
+      outer_result = generate(size, rng)
+      outer_result.map do |outer_val|
         inner_generator = generator_proc.call(outer_val)
         inner_generator.generate(size, rng)
       end.flatten
     end
   end
 
+  ##
+  # Creates a new Generator that returns a value by running `proc` on the output of the current Generator.
+  #
+  # >> Generators.choose(32..128).map(&:chr).call(10, Random.new(42))
+  # => "S"
   def map(&proc)
-    # bind { |val| Generator.wrap(proc.call(val)) }
     Generator.new do |size, rng|
       result = self.generate(size, rng)
       result.map(&proc)
@@ -95,6 +166,8 @@ class Generator
 end
 
 
+##
+#
 module Generators
 
   def constant(val)
