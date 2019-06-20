@@ -5,7 +5,7 @@ module Helper
     Enumerator.new do |yielder|
       acc = elem
       loop do
-        p acc
+        # p acc
         yielder << acc
         acc = op.call(acc)
       end
@@ -41,8 +41,8 @@ LazyTree = Struct.new(:root, :children) do
   def self.zip(collection_of_trees)
     roots = collection_of_trees.map(&:root)
     children = collection_of_trees.map(&:children).permutation
-    puts "CHILDREN:"
-    p children
+    # puts "CHILDREN:"
+    # p children
     LazyTree.new(roots, children)
   end
 
@@ -228,17 +228,25 @@ def forall(**bindings, &block)
   n_successful = 0
   generator_results = nil
   begin
-    (1..1000).each do |size|
+    (1..10000).each do |size|
       generator_results = binding_generator.generate(size, rng)
       PropertyCheckEvaluator.new(generator_results.root, &block).call()
       n_successful += 1
     end
   rescue Exception => problem
     output = StringIO.new
-    output.puts "FAILURE after #{n_successful} successful tests. Failed on:\n#{print_roots(generator_results.root)}"
+    output.puts ""
+    output.puts "FAILURE after #{n_successful} successful tests. Failed on:"
+    output.puts "`#{print_roots(generator_results.root)}`"
+    output.puts ""
+    output.puts "Exception: #{problem.full_message}"
     output.puts "Shrinking..."
-    problem_result = shrink(generator_results, &block)
-    output.puts "Shrunken input: #{print_roots(problem_result)}"
+    shrunken_result, shrunken_exception, num_shrink_steps = shrink(generator_results, &block)
+    output.puts "Shrunken input after #{num_shrink_steps} steps:"
+    output.puts "`#{print_roots(shrunken_result)}`"
+    output.puts ""
+    output.puts "Shrunken exception: #{shrunken_exception.full_message}"
+
     raise PropertyFailure, output.string
   end
 end
@@ -251,36 +259,43 @@ end
 
 def shrink(bindings_tree, &block)
   problem_child = bindings_tree
+  problem_exception = nil
+  num_shrink_steps = 0
   loop do
-    next_problem_child = shrink_step(problem_child, &block)
+    next_problem_child, next_problem_exception, child_shrink_steps = shrink_step(problem_child, &block)
+
     break if next_problem_child.nil?
 
     problem_child = next_problem_child
+    problem_exception = next_problem_exception
+    num_shrink_steps += child_shrink_steps
   end
 
-  problem_child.root
+  [problem_child.root, problem_exception, num_shrink_steps]
 end
 
 def shrink_step(bindings_tree, &block)
+  shrink_steps = 0
   bindings_tree.children.each do |child|
+    shrink_steps += 1
     begin
       PropertyCheckEvaluator.new(child.root, &block).call()
     rescue Exception => problem
-      return child
+      return [child, problem, shrink_steps]
     end
   end
 
-  return nil
+  [nil, nil, shrink_steps]
 end
 
 include Generators
 
-forall x: integer, y: nonnegative_integer, z: float do
-  puts x
-  puts y
-  puts z
+forall x: integer, z: float, y: nonnegative_integer do
+  # puts x
+  # puts y
+  # puts z
 
-  if z == 0.0
+  if y == 42
     raise "Boom!"
   end
 
