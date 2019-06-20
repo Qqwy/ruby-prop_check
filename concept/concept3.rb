@@ -1,3 +1,5 @@
+require 'stringio'
+
 module Helper
   def self.scanl(elem, &op)
     Enumerator.new do |yielder|
@@ -114,7 +116,6 @@ module Generators
     end
   end
 
-
   def choose(range)
     Generator.new do |_size, rng|
       val = rng.rand(range)
@@ -147,6 +148,20 @@ module Generators
     end
   end
 
+  def one_of(*choices)
+    choose(choices.length).bind do |index|
+      choices[index]
+    end
+  end
+
+  def frequency(frequencies)
+    choices = frequencies.reduce([]) do |acc, elem|
+      freq, val = elem
+      acc + ([val] * freq)
+    end
+    one_of(*choices)
+  end
+
   def tuple(*generators)
     # generators.map(&:bind).reduce do ||
     # end
@@ -164,6 +179,9 @@ module Generators
     #   end
     # end
   end
+end
+
+class PropertyFailure < StandardError
 end
 
 class PropertyCheckEvaluator
@@ -202,6 +220,8 @@ end
 
 def forall(**bindings, &block)
 
+  # Turns a hash of generators
+  # into a generator of hashes :D
   binding_generator = tuple(*bindings.map { |key, generator| generator.map { |val| [key, val] } }).map { |val| val.to_h }
 
   rng = Random::DEFAULT
@@ -209,16 +229,17 @@ def forall(**bindings, &block)
   generator_results = nil
   begin
     (1..1000).each do |size|
-      # generator_results = bindings.map { |name, generator| [name, generator.generate(size, rng)] }.to_h
       generator_results = binding_generator.generate(size, rng)
       PropertyCheckEvaluator.new(generator_results.root, &block).call()
       n_successful += 1
     end
-  rescue   Exception => problem
-    puts "FAILURE #{n_successful} successful tests. Failed on:\n#{print_roots(generator_results.root)}"
-    puts "Shrinking..."
+  rescue Exception => problem
+    output = StringIO.new
+    output.puts "FAILURE after #{n_successful} successful tests. Failed on:\n#{print_roots(generator_results.root)}"
+    output.puts "Shrinking..."
     problem_result = shrink(generator_results, &block)
-    puts "Shrunken input: #{print_roots(problem_result)}"
+    output.puts "Shrunken input: #{print_roots(problem_result)}"
+    raise PropertyFailure, output.string
   end
 end
 
@@ -228,30 +249,7 @@ def print_roots(lazy_tree_hash)
   end.join(", ")
 end
 
-def hash_of_trees2tree_of_hashes(hash_of_trees)
-  p hash_of_trees.each.force
-  # p hash_of_trees
-  # res = hash_of_trees.map do |key, tree|
-  #   tree.map { |val| [key, val] }
-  # end
-
-  # p res
-
-  # zres = LazyTree.zip(res)
-  # p zres
-
-  # p zres.to_a
-
-  # hres = zres.each { |coll| puts "COLL:"; p coll.lazy.force; coll.to_h }
-  # p hres
-
-  # hres
-end
-
 def shrink(bindings_tree, &block)
-  # res = hash_of_trees2tree_of_hashes(bindings)
-  # p res.lazy.force
-
   problem_child = bindings_tree
   loop do
     next_problem_child = shrink_step(problem_child, &block)
@@ -261,8 +259,6 @@ def shrink(bindings_tree, &block)
   end
 
   problem_child.root
-
-  # p res.children.first
 end
 
 def shrink_step(bindings_tree, &block)
