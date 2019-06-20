@@ -318,19 +318,29 @@ module Generators
     one_of(*choices)
   end
 
+  ##
+  # Generates an array containing always exactly one value from each of the passed generators,
+  # in the same order as specified:
+  #
+  # >> Generators.tuple(Generators.integer, Generators.float).call(10, Random.new(42))
+  # => [-4, 3.1415]
   def tuple(*generators)
-    # generators.map(&:bind).reduce do ||
-    # end
-    generators.reverse.reduce(Generator.wrap([])) do |acc, generator|
+    generators.reduce(Generator.wrap([])) do |acc, generator|
       generator.bind do |val|
         acc.map { |x| x << val }
       end
     end
   end
+
+  # TODO array
+  # TODO hash
+  # TODO string
+  # TODO unicode
+  # TODO sets?
 end
 
-class PropertyFailure < StandardError
-end
+# class PropertyFailure < StandardError
+# end
 
 class PropertyCheckEvaluator
   # A wrapper class that implements the 'Cloaker' concept
@@ -384,18 +394,21 @@ def forall(**bindings, &block)
   rescue Exception => problem
     output = StringIO.new
     output.puts ""
-    output.puts "FAILURE after #{n_successful} successful tests. Failed on:"
+    output.puts "FAILURE after #{n_successful} successful test runs. Failed on:"
     output.puts "`#{print_roots(generator_results.root)}`"
     output.puts ""
-    output.puts "Exception: #{problem.full_message}"
-    output.puts "Shrinking..."
-    shrunken_result, shrunken_exception, num_shrink_steps = shrink(generator_results, &block)
+    output.puts "Exception message: #{problem}"
+    output.puts ""
+    output.puts "Shrinking"
+    shrunken_result, shrunken_exception, num_shrink_steps = shrink(generator_results, output, &block)
+    output.puts ''
     output.puts "Shrunken input after #{num_shrink_steps} steps:"
     output.puts "`#{print_roots(shrunken_result)}`"
     output.puts ""
-    output.puts "Shrunken exception: #{shrunken_exception.full_message}"
+    output.puts "Shrunken exception: #{shrunken_exception}"
+    output.puts ""
 
-    raise PropertyFailure, output.string
+    raise problem, output.string, problem.backtrace
   end
 end
 
@@ -405,12 +418,12 @@ def print_roots(lazy_tree_hash)
   end.join(", ")
 end
 
-def shrink(bindings_tree, &block)
+def shrink(bindings_tree, output, &block)
   problem_child = bindings_tree
   problem_exception = nil
   num_shrink_steps = 0
   loop do
-    next_problem_child, next_problem_exception, child_shrink_steps = shrink_step(problem_child, &block)
+    next_problem_child, next_problem_exception, child_shrink_steps = shrink_step(problem_child, output, &block)
 
     break if next_problem_child.nil?
 
@@ -422,12 +435,13 @@ def shrink(bindings_tree, &block)
   [problem_child.root, problem_exception, num_shrink_steps]
 end
 
-def shrink_step(bindings_tree, &block)
+def shrink_step(bindings_tree, output, &block)
   shrink_steps = 0
   bindings_tree.children.each do |child|
     shrink_steps += 1
+    output.print '.'
     begin
-      PropertyCheckEvaluator.new(child.root, &block).call()
+      PropertyCheckEvaluator.new(child.root, &block).call
     rescue Exception => problem
       return [child, problem, shrink_steps]
     end
@@ -443,9 +457,9 @@ forall x: integer, z: float, y: nonnegative_integer do
   # puts y
   # puts z
 
-  # if y == 42
-  #   raise "Boom!"
-  # end
+  if y == 42
+    raise "Boom!"
+  end
 
   x > y == z
 end
