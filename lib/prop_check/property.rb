@@ -1,13 +1,14 @@
 require 'stringio'
 
-require './property/check_evaluator'
+require 'prop_check/property/check_evaluator'
 module PropCheck
   module Property
+    extend self
     def forall(**bindings, &block)
 
       # Turns a hash of generators
       # into a generator of hashes :D
-      binding_generator = tuple(*bindings.map { |key, generator| generator.map { |val| [key, val] } }).map { |val| val.to_h }
+      binding_generator = PropCheck::Generators.tuple(*bindings.map { |key, generator| generator.map { |val| [key, val] } }).map { |val| val.to_h }
 
       rng = Random::DEFAULT
       n_successful = 0
@@ -68,7 +69,7 @@ module PropCheck
         shrink_steps += 1
         output.print '.'
         begin
-          PropertyCheckEvaluator.new(child.root, &block).call
+          CheckEvaluator.new(child.root, &block).call
         rescue Exception => problem
           return [child, problem, shrink_steps]
         end

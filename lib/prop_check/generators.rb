@@ -1,10 +1,12 @@
-require 'generator'
+require 'prop_check/generator'
+require 'prop_check/lazy_tree'
 module PropCheck
   ##
   # Contains common generators.
   # Use this module by including it in the class (e.g. in your test suite)
   # where you want to use them.
   module Generators
+    extend self
     ##
     # Always returns the same value, regardless of `size` or `rng` (random number generator state)
     #
