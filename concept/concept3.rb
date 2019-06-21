@@ -370,7 +370,7 @@ class PropertyCheckEvaluator
     @caller.__send__(method, *args, &block)
   end
 
-  def respond_to?(*args)
+  def respond_to_missing?(*args)
     super || @caller.respond_to?(*args)
   end
 end
