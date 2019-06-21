@@ -9,10 +9,10 @@ module Helper
   # with each consecutive element obtained
   # by calling `operation` on the previous element.
   #
-  # >> Helper.scanl(0, &:next).take(10).force
-  # => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  # >> Helper.scanl([0, 1]) { |curr, next_elem| [next_elem, curr + next_elem] }.map(&:first).take(10).force
-  # => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+  #   >> Helper.scanl(0, &:next).take(10).force
+  #   => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  #   >> Helper.scanl([0, 1]) { |curr, next_elem| [next_elem, curr + next_elem] }.map(&:first).take(10).force
+  #   => [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
   def self.scanl(elem, &operation)
     Enumerator.new do |yielder|
       acc = elem
@@ -38,8 +38,8 @@ LazyTree = Struct.new(:root, :children) do
   ##
   # Maps `block` eagerly over `root` and lazily over `children`, returning a new LazyTree as result.
   #
-  # >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).map(&:next)
-  # => LazyTree.new(2, [LazyTree.new(3, [LazyTree.new(4)]), LazyTree.new(5)]).map(&:next)
+  #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).map(&:next)
+  #   => LazyTree.new(2, [LazyTree.new(3, [LazyTree.new(4)]), LazyTree.new(5)]).map(&:next)
   def map(&block)
     LazyTree.new(block.call(root), children.map { |child_tree| child_tree.map(&block) })
   end
@@ -64,8 +64,8 @@ LazyTree = Struct.new(:root, :children) do
   # Be aware that this lazy enumerable is potentially infinite,
   # possibly uncountably so.
   #
-  # >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).each.force
-  # => [1, 2, 3, 4]
+  #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).each.force
+  #   => [1, 2, 3, 4]
   def each#(&block)
     res = [[self.root], self.children.flat_map(&:each)].lazy.flat_map(&:lazy)
     # res = res.map(&block) if block_given?
@@ -80,8 +80,8 @@ LazyTree = Struct.new(:root, :children) do
   # Therefore, it is mostly useful for debugging; in production you probably want to use
   # the other mechanisms this class provides..
   #
-  # >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).to_a
-  # => [1, 2, 3, 4]
+  #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).to_a
+  #   => [1, 2, 3, 4]
   def to_a
     each.force
   end
@@ -116,10 +116,19 @@ class Generator
   # Generates a value, and only return this value
   # (drop information for shrinking)
   #
-  # >> Generators.integer.call(1000, Random.new(42))
-  # => 126
+  #   >> Generators.integer.call(1000, Random.new(42))
+  #   => 126
   def call(size = @@default_size, rng = @@default_rng)
     generate(size, rng).root
+  end
+
+  ##
+  # Returns `num_of_samples` values from calling this Generator.
+  # This is mostly useful for debugging if a generator behaves as you intend it to.
+  def sample(num_of_samples = 5, size = @@default_size, rng = @@default_rng)
+    num_of_samples.times.map do
+      call(size, rng)
+    end
   end
 
   ##
@@ -128,8 +137,8 @@ class Generator
   #
   # Keen readers may notice this as the Monadic 'pure'/'return' implementation for Generators.
   #
-  # >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
-  # => [2, 79]
+  #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
+  #   => [2, 79]
   def self.wrap(val)
     Generator.new { |_size, _rng| LazyTree.new(val, []) }
   end
@@ -140,8 +149,8 @@ class Generator
   #
   # Keen readers may notice this as the Monadic 'bind' (sometimes known as '>>=') implementation for Generators.
   #
-  # >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
-  # => [2, 79]
+  #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
+  #   => [2, 79]
   def bind(&generator_proc)
     Generator.new do |size, rng|
       outer_result = generate(size, rng)
@@ -155,8 +164,8 @@ class Generator
   ##
   # Creates a new Generator that returns a value by running `proc` on the output of the current Generator.
   #
-  # >> Generators.choose(32..128).map(&:chr).call(10, Random.new(42))
-  # => "S"
+  #   >> Generators.choose(32..128).map(&:chr).call(10, Random.new(42))
+  #   => "S"
   def map(&proc)
     Generator.new do |size, rng|
       result = self.generate(size, rng)
@@ -174,7 +183,7 @@ module Generators
   ##
   # Always returns the same value, regardless of `size` or `rng` (random number generator state)
   #
-  # >> Generators.constant(10)
+  #   >> Generators.constant(10)
   def constant(val)
     Generator.wrap(val)
   end
@@ -208,10 +217,10 @@ module Generators
   # This means `choose` is useful for e.g. picking an element out of multiple possibilities,
   # but for other purposes you probably want to use `integer` et co.
   #
-  # >> r = Random.new(42); 10.times.map { Generators.choose(0..5).call(10, r) }
-  # => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
-  # >> r = Random.new(42); 10.times.map { Generators.choose(0..5).call(20000, r) }
-  # => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
+  #   >> r = Random.new(42); 10.times.map { Generators.choose(0..5).call(10, r) }
+  #   => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
+  #   >> r = Random.new(42); 10.times.map { Generators.choose(0..5).call(20000, r) }
+  #   => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
   def choose(range)
     Generator.new do |_size, rng|
       val = rng.rand(range)
@@ -224,12 +233,12 @@ module Generators
   # Integers start small (around 0)
   # and become more extreme (both higher and lower, negative) when `size` increases.
   #
-  # >> Generators.integer.call(2, Random.new(42))
-  # => 2
-  # >> Generators.integer.call(10000, Random.new(42))
-  # => 5795
-  # >> r = Random.new(42); 10.times.map { Generators.integer.call(20000, r) }
-  # => [-4205, -19140, 18158, -8716, -13735, -3150, 17194, 1962, -3977, -18315]
+  #   >> Generators.integer.call(2, Random.new(42))
+  #   => 2
+  #   >> Generators.integer.call(10000, Random.new(42))
+  #   => 5795
+  #   >> r = Random.new(42); 10.times.map { Generators.integer.call(20000, r) }
+  #   => [-4205, -19140, 18158, -8716, -13735, -3150, 17194, 1962, -3977, -18315]
   def integer
     Generator.new do |size, rng|
       val = rng.rand(-size..size)
@@ -288,8 +297,8 @@ module Generators
   # Generates a single-character string
   # from the readable ASCII character set.
   #
-  # >> r = Random.new(42); 10.times.map{choose(32..128).map(&:chr).call(10, r) }
-  # => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
+  #   >> r = Random.new(42); 10.times.map{choose(32..128).map(&:chr).call(10, r) }
+  #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
   def readable_ascii_char
     choose(32..128).map(&:chr)
   end
@@ -308,8 +317,8 @@ module Generators
   # (representing the relative frequency of this generator)
   # and values to be generators.
   #
-  # >> r = Random.new(42); 10.times.map { Generators.frequency(5 => Generators.integer, 1 => Generators.char).call(10, r) }
-  # => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
+  #   >> r = Random.new(42); 10.times.map { Generators.frequency(5 => Generators.integer, 1 => Generators.char).call(10, r) }
+  #   => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
   def frequency(frequencies)
     choices = frequencies.reduce([]) do |acc, elem|
       freq, val = elem
@@ -322,8 +331,8 @@ module Generators
   # Generates an array containing always exactly one value from each of the passed generators,
   # in the same order as specified:
   #
-  # >> Generators.tuple(Generators.integer, Generators.float).call(10, Random.new(42))
-  # => [-4, 3.1415]
+  #   >> Generators.tuple(Generators.integer, Generators.float).call(10, Random.new(42))
+  #   => [-4, 3.1415]
   def tuple(*generators)
     generators.reduce(Generator.wrap([])) do |acc, generator|
       generator.bind do |val|
