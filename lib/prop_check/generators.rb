@@ -26,7 +26,7 @@ module PropCheck
         Helper.scanl(val) { |x| (x / 2.0).truncate }
           .take_while { |x| !x.zero? }
           .map { |x| val - x }
-          .map { |x| LazyTree.new(x) }
+          .map { |x| LazyTree.new(x, integer_shrink(x)) }
 
       # For negative numbers, we also attempt if the positive number has the same result.
       if val.abs > val
