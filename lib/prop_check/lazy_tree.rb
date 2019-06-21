@@ -6,7 +6,7 @@
 module LazyAppend
   refine Enumerable do
     def lazy_append(other_enumerator)
-      [self, other_enumerator].lazy.flat_map(&:itself)
+      [self, other_enumerator].lazy.flat_map(&:lazy)
     end
   end
 end
@@ -57,12 +57,14 @@ module PropCheck
     end
 
     def bind(&fun)
-      child_tree = fun.call(root)
+      inner_tree = fun.call(root)
+      inner_root = inner_tree.root
+      inner_children = inner_tree.children
       mapped_children = children.map { |child| child.bind(&fun) }
 
-      combined_children = child_tree.children.lazy_append(mapped_children)
+      combined_children = inner_children.lazy_append(mapped_children)
 
-      LazyTree.new(child_tree.root, combined_children)
+      LazyTree.new(inner_root, combined_children)
     end
 
     ##
@@ -75,13 +77,20 @@ module PropCheck
     #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).each.force
     #   => [1, 2, 3, 4]
     def each(&block)
-      base = [root]
-      recursive = children.map(&:each)
-      res = base.lazy_append(recursive)
+      squish = lambda(tree, list) do
+        new_children = tree.children.reduce(list) { |acc, elem| squish.call(elem, acc) }
+        [tree.root].lazy_append(new_children)
+      end
 
-      return res.each(&block) if block_given?
+      squish.call(self, [])
 
-      res
+      # base = [root]
+      # recursive = children.map(&:each)
+      # res = base.lazy_append(recursive)
+
+      # return res.each(&block) if block_given?
+
+      # res
 
       # res = [[root], children.flat_map(&:each)].lazy.flat_map(&:lazy)
       # res = res.map(&block) if block_given?
