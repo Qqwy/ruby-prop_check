@@ -8,7 +8,7 @@ module PropCheck
 
       # Turns a hash of generators
       # into a generator of hashes :D
-      binding_generator = PropCheck::Generators.tuple(*bindings.map { |key, generator| generator.map { |val| [key, val] } }).map { |val| val.to_h }
+      binding_generator = PropCheck::Generators.fixed_hash(bindings)
 
       rng = Random::DEFAULT
       n_successful = 0

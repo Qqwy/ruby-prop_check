@@ -168,6 +168,23 @@ module PropCheck
       end
     end
 
+    ##
+    # Given a `hash` where the values are generators,
+    # creates a generator that returns hashes
+    # with the same keys, and their corresponding values from their corresponding generators.
+    #
+    #    >> Generators.fixed_hash(a: Generators.integer(), b: Generators.float(), c: Generators.integer()).call(10, Random.new(42))
+    #    => {:a=>-3, :b=>13.0, :c=>-4}
+    def fixed_hash(hash)
+      keypair_generators =
+        hash.map do |key, generator|
+          generator.map { |val| [key, val] }
+        end
+
+      tuple(*keypair_generators)
+        .map(&:to_h)
+    end
+
     # TODO array
     # TODO hash
     # TODO string
