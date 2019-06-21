@@ -64,12 +64,19 @@ module PropCheck
     #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
     #   => [2, 79]
     def bind(&generator_proc)
+      # Generator.new do |size, rng|
+      #   outer_result = generate(size, rng)
+      #   outer_result.map do |outer_val|
+      #     inner_generator = generator_proc.call(outer_val)
+      #     inner_generator.generate(size, rng)
+      #   end.flatten
+      # end
       Generator.new do |size, rng|
         outer_result = generate(size, rng)
-        outer_result.map do |outer_val|
+        outer_result.bind do |outer_val|
           inner_generator = generator_proc.call(outer_val)
           inner_generator.generate(size, rng)
-        end.flatten
+        end
       end
     end
 

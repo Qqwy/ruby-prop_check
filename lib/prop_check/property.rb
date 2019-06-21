@@ -69,6 +69,7 @@ module PropCheck
         shrink_steps += 1
         output.print '.'
         begin
+          p child.root
           CheckEvaluator.new(child.root, &block).call
         rescue Exception => problem
           return [child, problem, shrink_steps]
