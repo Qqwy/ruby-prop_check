@@ -113,12 +113,12 @@ module PropCheck
 
     # TODO: fix implementation
     def self.zip(trees)
-      p "TREES: "
-      p trees.to_a
-      p "END TREES"
+      # p "TREES: "
+      # p trees.to_a
+      # p "END TREES"
       raise "Boom!" unless trees.to_a.is_a?(Array) && trees.to_a.first.is_a?(LazyTree)
       # p self
-      new_root = trees.map(&:root)
+      new_root = trees.to_a.map(&:root)
       # p new_root
       # new_children = trees.permutations.flat_map(&:children)
       new_children = permutations(trees).map { |children| LazyTree.zip(children) }

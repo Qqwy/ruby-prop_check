@@ -111,12 +111,15 @@ module PropCheck
     # and become more extreme (large positive and large negative numbers)
     # TODO testing for NaN, Infinity?
     def float
-      integer.bind do |a|
-        integer.bind do |b|
-          integer.bind do |c|
-            Generator.wrap(fraction(a, b, c))
-          end
-        end
+      # integer.bind do |a|
+      #   integer.bind do |b|
+      #     integer.bind do |c|
+      #       Generator.wrap(fraction(a, b, c))
+      #     end
+      #   end
+      # end
+      tuple2(integer, integer, integer).map do |a, b, c|
+        fraction(a, b, c)
       end
     end
 

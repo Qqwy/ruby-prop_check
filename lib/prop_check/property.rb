@@ -28,7 +28,7 @@ module PropCheck
         output.puts "Exception message: #{problem}"
         output.puts ""
         output.puts "Shrinking"
-        shrunken_result, shrunken_exception, num_shrink_steps = shrink2(generator_results, output, &block)
+        shrunken_result, shrunken_exception, num_shrink_steps = shrink(generator_results, output, &block)
         output.puts ''
         output.puts "Shrunken input after #{num_shrink_steps} steps:"
         output.puts "`#{print_roots(shrunken_result)}`"
@@ -85,11 +85,11 @@ module PropCheck
 
         shrink_steps += 1
         begin
-           p sibling.root
           CheckEvaluator.new(sibling.root, &fun).call
         rescue Exception => problem
-          p "PROBLEM:"
-          p problem
+          p sibling.root
+          # p "PROBLEM:"
+          # p problem
           problem_child = sibling
           parent_siblings = siblings
           siblings = problem_child.children.lazy
@@ -128,9 +128,9 @@ module PropCheck
         shrink_steps += 1
         output.print '.'
         begin
-          # p child.root
           CheckEvaluator.new(child.root, &block).call
         rescue Exception => problem
+          p child.root
           return [child, problem, shrink_steps]
         end
       end
