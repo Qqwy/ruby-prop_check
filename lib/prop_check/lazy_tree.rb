@@ -77,7 +77,7 @@ module PropCheck
     #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).each.force
     #   => [1, 2, 3, 4]
     def each(&block)
-      squish = lambda(tree, list) do
+      squish = lambda do |tree, list|
         new_children = tree.children.reduce(list) { |acc, elem| squish.call(elem, acc) }
         [tree.root].lazy_append(new_children)
       end
@@ -112,13 +112,31 @@ module PropCheck
     end
 
     # TODO: fix implementation
-    # def self.zip(trees)
-    #   p self
-    #   new_root = trees.map(&:root)
-    #   p new_root
-    #   new_children = trees.permutations.flat_map(&:children)
-    #   p new_children
-    #   LazyTree.new(new_root, new_children)
-    # end
+    def self.zip(trees)
+      p "TREES: "
+      p trees.to_a
+      p "END TREES"
+      raise "Boom!" unless trees.to_a.is_a?(Array) && trees.to_a.first.is_a?(LazyTree)
+      # p self
+      new_root = trees.map(&:root)
+      # p new_root
+      # new_children = trees.permutations.flat_map(&:children)
+      new_children = permutations(trees).map { |children| LazyTree.zip(children) }
+      # p new_children
+      LazyTree.new(new_root, new_children)
+    end
+
+    private_class_method def self.permutations(trees)
+      # p trees
+      trees.lazy.each_with_index.flat_map do |tree, index|
+        tree.children.map do |child|
+          child_trees = trees.to_a.clone
+          child_trees[index] = child
+          # p "CHILD TREES:"
+          # p child_trees
+          child_trees.lazy
+        end
+      end
+    end
   end
 end

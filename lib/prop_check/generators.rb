@@ -168,6 +168,14 @@ module PropCheck
       end
     end
 
+    def tuple2(*generators)
+      Generator.new do |size, rng|
+        LazyTree.zip(generators.map do |generator|
+          generator.generate(size, rng)
+        end)
+      end
+    end
+
     ##
     # Given a `hash` where the values are generators,
     # creates a generator that returns hashes
@@ -181,7 +189,7 @@ module PropCheck
           generator.map { |val| [key, val] }
         end
 
-      tuple(*keypair_generators)
+      tuple2(*keypair_generators)
         .map(&:to_h)
     end
 
