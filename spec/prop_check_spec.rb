@@ -31,9 +31,17 @@ RSpec.describe PropCheck do
         end
       end
 
-      it "works" do
-        PropCheck.forall(x: PropCheck::Generators.integer) do
-          expect(x).to be < 100
+      it "generates an error that Rspec can pick up" do
+        expect do
+          PropCheck.forall(x: PropCheck::Generators.integer) do
+            expect(x).to be < 100
+          end
+        end.to raise_error do |error|
+          expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
+          expect(error.message).to match(/\(after \d+ successful property test runs\)/m)
+          expect(error.message).to match(/Exception message:/m)
+          expect(error.message).to match(/Shrunken input \(after \d+ shrink steps\)/m)
+          expect(error.message).to match(/Shrunken exception:/m)
         end
       end
     end
