@@ -46,35 +46,27 @@ module PropCheck
 
       n_runs = 0
       n_successful = 0
-      size = 1
 
-      rng = Random::DEFAULT
-      generator_results = nil
-      begin
-        (1..@settings[:max_generate_attempts]).each do
-          break if n_runs > @settings[:n_runs]
-          generator_results = binding_generator.generate(size, rng)
-          condition_success = CheckEvaluator.new(generator_results.root, &@condition).call
-
-          next unless condition_success
-
-          size += 1
-          n_runs += 1
-          CheckEvaluator.new(generator_results.root, &block).call
+      attempts_enumerator(binding_generator).each do |generator_result|
+        # Loop stops at first exception
+        # since it is reraised
+        n_runs += 1
+        begin
+          CheckEvaluator.new(generator_result.root, &block).call
           n_successful += 1
-        end
-      rescue PropCheck::UserError => e
-        raise e
-      rescue Exception => problem
-        output = show_problem_output(problem, generator_results, n_successful, &block)
-        output_string =
-          if output.is_a? StringIO
-            output.string
-          else
-            problem.message
-          end
+        rescue PropCheck::UserError => e
+          raise e
+        rescue Exception => problem
+          output = show_problem_output(problem, generator_result, n_successful, &block)
+          output_string =
+            if output.is_a? StringIO
+              output.string
+            else
+              problem.message
+            end
 
-        raise problem, output_string, problem.backtrace
+          raise problem, output_string, problem.backtrace
+        end
       end
 
       if n_runs < @settings[:n_runs]
@@ -87,12 +79,24 @@ module PropCheck
         Try refining your generators instead.
         """
       end
-
-      self
     end
 
-    private def run_attempt()
+    private def attempts_enumerator(binding_generator)
 
+      rng = Random::DEFAULT
+      n_runs = 0
+      size = 1
+      (0...@settings[:max_generate_attempts])
+        .lazy
+        .map { binding_generator.generate(size, rng) }
+        .select { |val| CheckEvaluator.new(val.root, &@condition).call }
+        .map do |result|
+          n_runs += 1
+          size += 1
+
+          result
+        end
+        .take_while { n_runs <= @settings[:n_runs] }
     end
 
     private def show_problem_output(problem, generator_results, n_successful, &block)
