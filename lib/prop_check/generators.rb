@@ -196,8 +196,25 @@ module PropCheck
         .map(&:to_h)
     end
 
-    # TODO array
-    # TODO hash
+    def array(element_generator)
+      nonnegative_integer.bind do |generator|
+        generators = (0...generator).map do
+          element_generator.clone
+        end
+
+        tuple2(*generators)
+      end
+    end
+
+    def hash(key_generator, value_generator)
+      array(tuple2(key_generator, value_generator))
+        .map(&:to_h)
+    end
+
+    def readable_ascii_string
+      array(readable_ascii_char).map(&:join)
+    end
+
     # TODO string
     # TODO unicode
     # TODO sets?

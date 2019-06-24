@@ -48,9 +48,7 @@ RSpec.describe PropCheck do
           end
         end
       end
-
     end
   end
-
 end
 

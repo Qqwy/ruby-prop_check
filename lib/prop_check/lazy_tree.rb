@@ -1,10 +1,10 @@
 ##
 # A refinement for enumerators
 # to allow lazy appending of two (potentially lazy) enumerators:
-#   >> [1,2,3].lazy_append([4,5.6]).to_a
-#   => [1,2,3,4,5,6]
 module LazyAppend
   refine Enumerable do
+    ##   >> [1,2,3].lazy_append([4,5.6]).to_a
+    ##   => [1,2,3,4,5,6]
     def lazy_append(other_enumerator)
       [self, other_enumerator].lazy.flat_map(&:lazy)
     end
@@ -27,8 +27,8 @@ module PropCheck
     ##
     # Maps `block` eagerly over `root` and lazily over `children`, returning a new LazyTree as result.
     #
-    #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).map(&:next)
-    #   => LazyTree.new(2, [LazyTree.new(3, [LazyTree.new(4)]), LazyTree.new(5)]).map(&:next)
+    #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).map(&:next).to_a
+    #   => LazyTree.new(2, [LazyTree.new(3, [LazyTree.new(4)]), LazyTree.new(5)]).to_a
     def map(&block)
       new_root = block.call(root)
       new_children = children.map { |child_tree| child_tree.map(&block) }
@@ -75,7 +75,7 @@ module PropCheck
     # possibly uncountably so.
     #
     #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).each.force
-    #   => [1, 2, 3, 4]
+    #   => [1, 4, 2, 3]
     def each(&block)
       squish = lambda do |tree, list|
         new_children = tree.children.reduce(list) { |acc, elem| squish.call(elem, acc) }
@@ -106,7 +106,7 @@ module PropCheck
     # the other mechanisms this class provides..
     #
     #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).to_a
-    #   => [1, 2, 3, 4]
+    #   => [1, 4, 2, 3]
     def to_a
       each.force
     end
@@ -116,7 +116,7 @@ module PropCheck
       # p "TREES: "
       # p trees.to_a
       # p "END TREES"
-      raise "Boom!" unless trees.to_a.is_a?(Array) && trees.to_a.first.is_a?(LazyTree)
+      # raise "Boom!" unless trees.to_a.is_a?(Array) && trees.to_a.first.is_a?(LazyTree)
       # p self
       new_root = trees.to_a.map(&:root)
       # p new_root
