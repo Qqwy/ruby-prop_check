@@ -8,6 +8,8 @@ module PropCheck
     # This allows us to bind the variables specified in `bindings`
     # one way during checking and another way during shrinking.
     class CheckEvaluator
+      include RSpec::Matchers if Object.const_defined?('RSpec')
+
       def initialize(bindings, &block)
         @caller = eval 'self', block.binding, __FILE__, __LINE__
         @block = block

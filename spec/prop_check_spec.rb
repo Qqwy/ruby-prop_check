@@ -30,6 +30,12 @@ RSpec.describe PropCheck do
           expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_settings({}, &block) }.to yield_control
         end
       end
+
+      it "works" do
+        PropCheck.forall(x: PropCheck::Generators.integer) do
+          expect(x).to be < 100
+        end
+      end
     end
   end
 

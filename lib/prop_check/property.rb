@@ -116,22 +116,24 @@ module PropCheck
 
     private def pre_output(output, n_successful, generated_root, problem)
       output.puts ""
-      output.puts "FAILURE after #{n_successful} successful test runs. Failed on:"
+      output.puts "(after #{n_successful} successful property test runs)"
+      output.puts "Failed on: "
       output.puts "`#{print_roots(generated_root)}`"
       output.puts ""
-      output.puts "Exception message: #{problem}"
+      output.puts "Exception message:\n---\n#{problem}"
+      output.puts "---"
       output.puts ""
-      output.puts "Shrinking"
 
       output
     end
 
     private def post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
       output.puts ''
-      output.puts "Shrunken input after #{n_shrink_steps} steps:"
+      output.puts "Shrunken input (after #{n_shrink_steps} shrink steps):"
       output.puts "`#{print_roots(shrunken_result)}`"
       output.puts ""
-      output.puts "Shrunken exception: #{shrunken_exception}"
+      output.puts "Shrunken exception:\n---\n#{shrunken_exception}"
+      output.puts "---"
       output.puts ""
 
       output
@@ -144,6 +146,7 @@ module PropCheck
     end
 
     def shrink2(bindings_tree, io, &fun)
+      io.puts 'Shrinking...' if @settings[:verbose]
       problem_child = bindings_tree
       siblings = problem_child.children.lazy
       parent_siblings = nil
@@ -161,7 +164,7 @@ module PropCheck
         end
 
         shrink_steps += 1
-        io.print '.'
+        io.print '.' if @settings[:verbose]
 
         begin
           CheckEvaluator.new(sibling.root, &fun).call
