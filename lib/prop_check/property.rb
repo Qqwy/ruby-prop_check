@@ -29,8 +29,10 @@ module PropCheck
       @settings = @@default_settings
     end
 
-    def with_settings(**settings)
+    def with_settings(**settings, &block)
       @settings = @settings.merge(settings)
+
+      return self.check(&block) if block_given?
 
       self
     end
