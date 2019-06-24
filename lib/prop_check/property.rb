@@ -148,22 +148,22 @@ module PropCheck
       problem_exception = nil
       shrink_steps = 0
       (0..@settings[:max_shrink_steps]).each do
-
         begin
           sibling = siblings.next
         rescue StopIteration
           break if parent_siblings.nil?
+
           siblings = parent_siblings.lazy
           parent_siblings = nil
           next
         end
 
         shrink_steps += 1
-        io.print "."
+        io.print '.'
+
         begin
           CheckEvaluator.new(sibling.root, &fun).call
         rescue Exception => problem
-          p sibling.root
           problem_child = sibling
           parent_siblings = siblings
           siblings = problem_child.children.lazy

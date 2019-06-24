@@ -1,4 +1,7 @@
 require "bundler/setup"
+require 'simplecov'
+SimpleCov.start
+
 require "prop_check"
 
 RSpec.configure do |config|
