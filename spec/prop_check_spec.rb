@@ -41,7 +41,9 @@ RSpec.describe PropCheck do
             expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
             expect(error.message).to match(/\(after \d+ successful property test runs\)/m)
             expect(error.message).to match(/Exception message:/m)
-            expect(error.message).to match(/Shrunken input \(after \d+ shrink steps\)/m)
+
+            # Test basic shrinking real quick:
+            expect(error.message).to match(/Shrunken input \(after \d+ shrink steps\):\n`x = 100`/m)
             expect(error.message).to match(/Shrunken exception:/m)
           end
         end
