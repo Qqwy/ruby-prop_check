@@ -1,9 +1,8 @@
 require 'doctest/rspec'
 
-Generator = PropCheck::Generator
-Generators = PropCheck::Generators
 
 RSpec.describe PropCheck::Generator do
-
-    doctest PropCheck::Generator
+  Generator = PropCheck::Generator
+  Generators = PropCheck::Generators
+  doctest PropCheck::Generator
 end

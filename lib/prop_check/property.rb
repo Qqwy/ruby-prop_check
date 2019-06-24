@@ -145,7 +145,7 @@ module PropCheck
       end.join(", ")
     end
 
-    def shrink2(bindings_tree, io, &fun)
+    private def shrink2(bindings_tree, io, &fun)
       io.puts 'Shrinking...' if @settings[:verbose]
       problem_child = bindings_tree
       siblings = problem_child.children.lazy
