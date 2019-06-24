@@ -2,51 +2,138 @@ require 'stringio'
 
 require 'prop_check/property/check_evaluator'
 module PropCheck
-  module Property
-    extend self
-    def forall(**bindings, &block)
+  class Property
+    @@default_settings = {
+      verbose: false,
+      n_runs: 1_000,
+      max_generate_attempts: 10_000
+    }
 
-      # Turns a hash of generators
-      # into a generator of hashes :D
-      binding_generator = PropCheck::Generators.fixed_hash(bindings)
+    def self.forall(name = '', **bindings, &block)
 
-      rng = Random::DEFAULT
-      n_successful = 0
-      generator_results = nil
-      begin
-        (1..1000).each do |size|
-          generator_results = binding_generator.generate(size, rng)
-          CheckEvaluator.new(generator_results.root, &block).call()
-          n_successful += 1
-        end
-      rescue Exception => problem
-        output = StringIO.new
-        output.puts ""
-        output.puts "FAILURE after #{n_successful} successful test runs. Failed on:"
-        output.puts "`#{print_roots(generator_results.root)}`"
-        output.puts ""
-        output.puts "Exception message: #{problem}"
-        output.puts ""
-        output.puts "Shrinking"
-        shrunken_result, shrunken_exception, num_shrink_steps = shrink(generator_results, output, &block)
-        output.puts ''
-        output.puts "Shrunken input after #{num_shrink_steps} steps:"
-        output.puts "`#{print_roots(shrunken_result)}`"
-        output.puts ""
-        output.puts "Shrunken exception: #{shrunken_exception}"
-        output.puts ""
+      property = new(name, bindings)
 
-        raise problem, output.string, problem.backtrace
-      end
+      return property.check(&block) if block_given?
+
+      property
     end
 
-    def print_roots(lazy_tree_hash)
+    attr_reader :name, :bindings, :condition, :settings
+    def initialize(name = '', **bindings)
+      raise ArgumentError, 'No bindings specified!' if bindings.empty?
+
+      @name = name
+      @bindings = bindings
+      @condition = -> { true }
+      @settings = @@default_settings
+    end
+
+    def with_settings(**settings)
+      @settings = @settings.merge(settings)
+
+      self
+    end
+
+    def adhering_to(&new_condition)
+      original_condition = @condition.dup
+      @condition = -> { instance_exec(&original_condition) && instance_exec(&new_condition) }
+
+      self
+    end
+
+    def check(&block)
+      binding_generator = PropCheck::Generators.fixed_hash(bindings)
+
+      n_runs = 0
+      n_successful = 0
+      size = 1
+
+      rng = Random::DEFAULT
+      generator_results = nil
+      begin
+        (1..@settings[:max_generate_attempts]).each do
+          break if n_runs > @settings[:n_runs]
+          generator_results = binding_generator.generate(size, rng)
+          condition_success = CheckEvaluator.new(generator_results.root, &@condition).call
+
+          next unless condition_success
+
+          size += 1
+          n_runs += 1
+          CheckEvaluator.new(generator_results.root, &block).call
+          n_successful += 1
+        end
+      rescue PropCheck::UserError => e
+        raise e
+      rescue Exception => problem
+        output = show_problem_output(problem, generator_results, n_successful, &block)
+        output_string =
+          if output.is_a? StringIO
+            output.string
+          else
+            problem.message
+          end
+
+        raise problem, output_string, problem.backtrace
+      end
+
+      if n_runs < @settings[:n_runs]
+        raise GeneratorExhausted, """
+        Could not perform `n_runs = #{@settings[:n_runs]}` runs,
+        (exhausted #{@settings[:max_generate_attempts]} tries)
+        because too few generator results were adhering to
+        the `adhering_to` condition.
+
+        Try refining your generators instead.
+        """
+      end
+
+      self
+    end
+
+    private def run_attempt()
+
+    end
+
+    private def show_problem_output(problem, generator_results, n_successful, &block)
+      output = @settings[:verbose] ? STDOUT : StringIO.new
+      output = pre_output(output, n_successful, generator_results.root, problem)
+      shrunken_result, shrunken_exception, n_shrink_steps = shrink(generator_results, output, &block)
+      output = post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
+
+      output
+    end
+
+    private def pre_output(output, n_successful, generated_root, problem)
+      output.puts ""
+      output.puts "FAILURE after #{n_successful} successful test runs. Failed on:"
+      output.puts "`#{print_roots(generated_root)}`"
+      output.puts ""
+      output.puts "Exception message: #{problem}"
+      output.puts ""
+      output.puts "Shrinking"
+
+      output
+    end
+
+    private def post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
+      output.puts ''
+      output.puts "Shrunken input after #{n_shrink_steps} steps:"
+      output.puts "`#{print_roots(shrunken_result)}`"
+      output.puts ""
+      output.puts "Shrunken exception: #{shrunken_exception}"
+      output.puts ""
+
+      output
+    end
+
+    private def print_roots(lazy_tree_hash)
       lazy_tree_hash.map do |name, val|
         "#{name} = #{val.inspect}"
       end.join(", ")
     end
 
-    def shrink(bindings_tree, output, &block)
+    private def shrink(bindings_tree, output, &block)
       problem_child = bindings_tree
       problem_exception = nil
       num_shrink_steps = 0
@@ -63,66 +150,7 @@ module PropCheck
       [problem_child.root, problem_exception, num_shrink_steps]
     end
 
-    def shrink2(bindings_tree, io, &fun)
-      problem_child = bindings_tree
-      siblings = problem_child.children.lazy
-      parent_siblings = nil
-      problem_exception = nil
-      shrink_steps = 0
-      10_000.times do
-        # next_problem_child, siblings, next_problem_exception, child_shrink_steps = shrink_step2(siblings, io, &fun)
-
-        # if siblings.empty?
-        begin
-          sibling = siblings.next
-        rescue StopIteration
-          break if parent_siblings.nil?
-          siblings = parent_siblings.lazy
-          parent_siblings = nil
-          next
-        end
-        # end
-
-        shrink_steps += 1
-        begin
-          CheckEvaluator.new(sibling.root, &fun).call
-        rescue Exception => problem
-          p sibling.root
-          # p "PROBLEM:"
-          # p problem
-          problem_child = sibling
-          parent_siblings = siblings
-          siblings = problem_child.children.lazy
-          problem_exception = problem
-        end
-      end
-
-      [problem_child.root, problem_exception, shrink_steps]
-    end
-
-    def shrink_step2(siblings, io, &fun)
-      shrink_steps = 0
-      loop do
-        begin
-          sibling = siblings.next
-        rescue StopIteration
-          break
-        end
-
-        shrink_steps += 1
-        io.print "."
-        begin
-          # p sibling.root
-          CheckEvaluator.new(sibling.root, &fun).call
-        rescue Exception => problem
-          return [sibling, siblings, problem, shrink_steps]
-        end
-      end
-
-      return [nil, [], nil, shrink_steps]
-    end
-
-    def shrink_step(bindings_tree, output, &block)
+    private def shrink_step(bindings_tree, output, &block)
       shrink_steps = 0
       bindings_tree.children.each do |child|
         shrink_steps += 1
@@ -130,12 +158,69 @@ module PropCheck
         begin
           CheckEvaluator.new(child.root, &block).call
         rescue Exception => problem
-          p child.root
           return [child, problem, shrink_steps]
         end
       end
 
       [nil, nil, shrink_steps]
     end
+
+
+    # def shrink2(bindings_tree, io, &fun)
+    #   problem_child = bindings_tree
+    #   siblings = problem_child.children.lazy
+    #   parent_siblings = nil
+    #   problem_exception = nil
+    #   shrink_steps = 0
+    #   10_000.times do
+    #     # next_problem_child, siblings, next_problem_exception, child_shrink_steps = shrink_step2(siblings, io, &fun)
+
+    #     # if siblings.empty?
+    #     begin
+    #       sibling = siblings.next
+    #     rescue StopIteration
+    #       break if parent_siblings.nil?
+    #       siblings = parent_siblings.lazy
+    #       parent_siblings = nil
+    #       next
+    #     end
+    #     # end
+
+    #     shrink_steps += 1
+    #     begin
+    #       CheckEvaluator.new(sibling.root, &fun).call
+    #     rescue Exception => problem
+    #       p sibling.root
+    #       problem_child = sibling
+    #       parent_siblings = siblings
+    #       siblings = problem_child.children.lazy
+    #       problem_exception = problem
+    #     end
+    #   end
+
+    #   [problem_child.root, problem_exception, shrink_steps]
+    # end
+
+    # def shrink_step2(siblings, io, &fun)
+    #   shrink_steps = 0
+    #   loop do
+    #     begin
+    #       sibling = siblings.next
+    #     rescue StopIteration
+    #       break
+    #     end
+
+    #     shrink_steps += 1
+    #     io.print "."
+    #     begin
+    #       # p sibling.root
+    #       CheckEvaluator.new(sibling.root, &fun).call
+    #     rescue Exception => problem
+    #       return [sibling, siblings, problem, shrink_steps]
+    #     end
+    #   end
+
+    #   return [nil, [], nil, shrink_steps]
+    # end
   end
 end

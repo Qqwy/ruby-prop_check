@@ -1,5 +1,5 @@
 module PropCheck
-  module Property
+  class Property
     # A wrapper class that implements the 'Cloaker' concept
     # which allows us to refer to variables set in 'bindings',
     # while still being able to access things that are only in scope

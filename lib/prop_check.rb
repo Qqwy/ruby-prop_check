@@ -5,5 +5,12 @@ require 'prop_check/generators'
 require 'prop_check/helper'
 module PropCheck
   class Error < StandardError; end
-  extend PropCheck::Property
+  class UserError < Error; end
+  class GeneratorExhausted < UserError; end
+
+  extend self
+
+  def forall(*args, **kwargs, &block)
+    PropCheck::Property.forall(*args, **kwargs, &block)
+  end
 end
