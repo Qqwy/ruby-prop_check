@@ -6,7 +6,7 @@ require 'prop_check/helper'
 module PropCheck
   class Error < StandardError; end
   class UserError < Error; end
-  class GeneratorExhausted < UserError; end
+  class GeneratorExhaustedError < UserError; end
   class MaxShrinkStepsExceededError < UserError; end
 
   extend self

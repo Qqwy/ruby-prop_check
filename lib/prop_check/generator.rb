@@ -52,7 +52,7 @@ module PropCheck
     #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
     #   => [2, 79]
     def self.wrap(val)
-      Generator.new { |_size, _rng| LazyTree.new(val, []) }
+      Generator.new { |_size, _rng| LazyTree.wrap(val) }
     end
 
     ##

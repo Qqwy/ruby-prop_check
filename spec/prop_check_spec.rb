@@ -43,6 +43,24 @@ RSpec.describe PropCheck do
           end
         end
       end
+
+      describe "#where" do
+        it "filters results" do
+          PropCheck.forall(y: PropCheck::Generators.integer, x: PropCheck::Generators.integer).where { x != y}.check do
+            expect(x).to_not eq y
+          end
+        end
+
+        it "raises an error if too much was filtered" do
+          expect do
+            PropCheck.forall(x: PropCheck::Generators.integer).where {x == 0}.check do
+              true
+            end
+          end.to raise_error do |error|
+            expect(error).to be_a(PropCheck::GeneratorExhaustedError)
+          end
+        end
+      end
     end
   end
 end

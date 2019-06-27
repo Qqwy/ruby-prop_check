@@ -63,7 +63,7 @@ module PropCheck
     private def ensure_not_exhausted!(n_runs)
       return if n_runs >= @settings[:n_runs]
 
-      raise GeneratorExhausted, """
+      raise GeneratorExhaustedError, """
         Could not perform `n_runs = #{@settings[:n_runs]}` runs,
         (exhausted #{@settings[:max_generate_attempts]} tries)
         because too few generator results were adhering to
