@@ -75,8 +75,16 @@ module PropCheck
 
     private def check_attempt(generator_result, n_successful, &block)
       CheckEvaluator.new(generator_result.root, &block).call
-    rescue PropCheck::UserError => e
-      raise e
+    rescue UserError => e
+      p "WE HAVE A USER ERROR"
+      p e
+      raise
+
+    # immediately stop (without shrinnking) for when the app is asked
+    # to close by outside intervention
+    rescue SignalException, SystemExit
+      raise
+
     # We want to capture _all_ exceptions (even low-level ones) here,
     # so we can shrink to find their cause.
     # don't worry: they all get reraised

@@ -12,53 +12,69 @@ RSpec.describe PropCheck do
       it "runs the property test when called with a block" do
         expect { |block| PropCheck.forall(x: PropCheck::Generators.integer, &block) }.to yield_control
       end
+
+      it "will not shrink upon encountering a SystemExit" do
+        expect do
+          PropCheck.forall(x: PropCheck::Generators.integer) do
+            raise SystemExit if x > 3
+          end
+        end.to raise_error(SystemExit)
+      end
+
+      it "will not shrink upon encountering a SignalException" do
+        expect do
+          PropCheck.forall(x: PropCheck::Generators.integer) do
+            Process.kill('HUP',Process.pid) if x > 3
+          end
+        end.to raise_error(SignalException)
+      end
+    end
+  end
+
+  describe "Property" do
+    describe "#with_settings" do
+      it "updates the settings" do
+        p = PropCheck.forall(x: PropCheck::Generators.integer)
+        expect(p.settings[:verbose]).to be false
+        expect(p.with_settings(verbose: true).settings[:verbose]).to be true
+      end
+      it "Runs the property test when called with a block" do
+        expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_settings({}, &block) }.to yield_control
+      end
     end
 
-    describe "Property" do
-      describe "#with_settings" do
-        it "updates the settings" do
-          p = PropCheck.forall(x: PropCheck::Generators.integer)
-          expect(p.settings[:verbose]).to be false
-          expect(p.with_settings(verbose: true).settings[:verbose]).to be true
+    describe "#check" do
+      it "generates an error that Rspec can pick up" do
+        expect do
+          PropCheck.forall(x: PropCheck::Generators.integer) do
+            expect(x).to be < 100
+          end
+        end.to raise_error do |error|
+          expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
+          expect(error.message).to match(/\(after \d+ successful property test runs\)/m)
+          expect(error.message).to match(/Exception message:/m)
+
+          # Test basic shrinking real quick:
+          expect(error.message).to match(/Shrunken input \(after \d+ shrink steps\):\n`x = 100`/m)
+          expect(error.message).to match(/Shrunken exception:/m)
         end
-        it "Runs the property test when called with a block" do
-          expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_settings({}, &block) }.to yield_control
+      end
+    end
+
+    describe "#where" do
+      it "filters results" do
+        PropCheck.forall(y: PropCheck::Generators.integer, x: PropCheck::Generators.integer).where { x != y}.check do
+          expect(x).to_not eq y
         end
       end
 
-      describe "#check" do
-        it "generates an error that Rspec can pick up" do
-          expect do
-            PropCheck.forall(x: PropCheck::Generators.integer) do
-              expect(x).to be < 100
-            end
-          end.to raise_error do |error|
-            expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
-            expect(error.message).to match(/\(after \d+ successful property test runs\)/m)
-            expect(error.message).to match(/Exception message:/m)
-
-            # Test basic shrinking real quick:
-            expect(error.message).to match(/Shrunken input \(after \d+ shrink steps\):\n`x = 100`/m)
-            expect(error.message).to match(/Shrunken exception:/m)
+      it "raises an error if too much was filtered" do
+        expect do
+          PropCheck.forall(x: PropCheck::Generators.integer).where {x == 0}.check do
+            true
           end
-        end
-      end
-
-      describe "#where" do
-        it "filters results" do
-          PropCheck.forall(y: PropCheck::Generators.integer, x: PropCheck::Generators.integer).where { x != y}.check do
-            expect(x).to_not eq y
-          end
-        end
-
-        it "raises an error if too much was filtered" do
-          expect do
-            PropCheck.forall(x: PropCheck::Generators.integer).where {x == 0}.check do
-              true
-            end
-          end.to raise_error do |error|
-            expect(error).to be_a(PropCheck::GeneratorExhaustedError)
-          end
+        end.to raise_error do |error|
+          expect(error).to be_a(PropCheck::GeneratorExhaustedError)
         end
       end
     end
