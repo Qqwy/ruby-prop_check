@@ -75,10 +75,6 @@ module PropCheck
 
     private def check_attempt(generator_result, n_successful, &block)
       CheckEvaluator.new(generator_result.root, &block).call
-    rescue UserError => e
-      p "WE HAVE A USER ERROR"
-      p e
-      raise
 
     # immediately stop (without shrinnking) for when the app is asked
     # to close by outside intervention
@@ -89,8 +85,19 @@ module PropCheck
     # so we can shrink to find their cause.
     # don't worry: they all get reraised
     rescue Exception => e
-      output = show_problem_output(e, generator_result, n_successful, &block)
+      output, shrunken_result, shrunken_exception, n_shrink_steps = show_problem_output(e, generator_result, n_successful, &block)
       output_string = output.is_a?(StringIO) ? output.string : e.message
+
+      e.define_singleton_method :prop_check_info do
+        {
+          original_input: generator_result.root,
+          original_exception_message: e.message,
+          shrunken_input: shrunken_result,
+          shrunken_exception: shrunken_exception,
+          n_successful: n_successful,
+          n_shrink_steps: n_shrink_steps
+        }
+      end
 
       raise e, output_string, e.backtrace
     end
@@ -119,7 +126,7 @@ module PropCheck
       shrunken_result, shrunken_exception, n_shrink_steps = shrink2(generator_results, output, &block)
       output = post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
 
-      output
+      [output, shrunken_result, shrunken_exception, n_shrink_steps]
     end
 
     private def pre_output(output, n_successful, generated_root, problem)
