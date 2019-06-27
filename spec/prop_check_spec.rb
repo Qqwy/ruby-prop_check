@@ -114,7 +114,6 @@ RSpec.describe PropCheck do
       it "raises an error if too much was filtered" do
         expect do
           PropCheck.forall(x: PropCheck::Generators.integer).where {x == 0}.check do
-            true
           end
         end.to raise_error do |error|
           expect(error).to be_a(PropCheck::GeneratorExhaustedError)
@@ -126,7 +125,6 @@ RSpec.describe PropCheck do
       it "crashes when doing bullshit in the where block" do
         expect do
           PropCheck.forall(x: PropCheck::Generators.integer).where {x.unexistentmethod == 3}.check do
-            true
           end
         end.to raise_error do |error|
           expect(error).to be_a(NoMethodError)

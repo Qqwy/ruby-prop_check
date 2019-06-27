@@ -37,7 +37,7 @@ module PropCheck
     ##
     # Returns `num_of_samples` values from calling this Generator.
     # This is mostly useful for debugging if a generator behaves as you intend it to.
-    def sample(num_of_samples = 5, size = @@default_size, rng = @@default_rng)
+    def sample(num_of_samples = 10, size: @@default_size, rng: @@default_rng)
       num_of_samples.times.map do
         call(size, rng)
       end

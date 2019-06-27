@@ -44,9 +44,9 @@ module PropCheck
     # This means `choose` is useful for e.g. picking an element out of multiple possibilities,
     # but for other purposes you probably want to use `integer` et co.
     #
-    #   >> r = Random.new(42); 10.times.map { Generators.choose(0..5).call(10, r) }
+    #   >> r = Random.new(42); Generators.choose(0..5).sample(size: 10, rng: r)
     #   => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
-    #   >> r = Random.new(42); 10.times.map { Generators.choose(0..5).call(20000, r) }
+    #   >> r = Random.new(42); Generators.choose(0..5).sample(size: 20000, rng: r)
     #   => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
     def choose(range)
       Generator.new do |_size, rng|
@@ -64,7 +64,7 @@ module PropCheck
     #   => 1
     #   >> Generators.integer.call(10000, Random.new(42))
     #   => 5795
-    #   >> r = Random.new(42); 10.times.map { Generators.integer.call(20000, r) }
+    #   >> r = Random.new(42); Generators.integer.sample(size: 20000, rng: r)
     #   => [-4205, -19140, 18158, -8716, -13735, -3150, 17194, 1962, -3977, -18315]
     def integer
       Generator.new do |size, rng|
@@ -127,7 +127,7 @@ module PropCheck
     # Generates a single-character string
     # from the readable ASCII character set.
     #
-    #   >> r = Random.new(42); 10.times.map{Generators.choose(32..128).map(&:chr).call(10, r) }
+    #   >> Generators.choose(32..128).map(&:chr).sample(size: 10, rng: Random.new(42))
     #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
     def readable_ascii_char
       choose(32..128).map(&:chr)
