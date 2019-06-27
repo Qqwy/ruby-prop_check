@@ -10,11 +10,6 @@ RSpec.describe PropCheck do
       end
 
       it "runs the property test when called with a block" do
-        # expect(
-        #   PropCheck.forall(x: PropCheck::Generators.integer).with_settings(verbose: true) do
-        #     true
-        #   end
-        # ).to be nil
         expect { |block| PropCheck.forall(x: PropCheck::Generators.integer, &block) }.to yield_control
       end
     end
@@ -51,4 +46,3 @@ RSpec.describe PropCheck do
     end
   end
 end
-

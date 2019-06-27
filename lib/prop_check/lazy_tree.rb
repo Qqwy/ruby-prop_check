@@ -40,17 +40,17 @@ module PropCheck
     # in a single flattened tree, with subtrees that are closer to the root
     # and the left subtree earlier in the list of children.
     # TODO: Check for correctness
-    def flatten
-      root_tree = root
-      root_root = root_tree.root
+    # def flatten
+    #   root_tree = root
+    #   root_root = root_tree.root
 
-      root_children = root_tree.children
-      flattened_children = children.map(&:flatten)
+    #   root_children = root_tree.children
+    #   flattened_children = children.map(&:flatten)
 
-      combined_children = root_children.lazy_append(flattened_children)
+    #   combined_children = root_children.lazy_append(flattened_children)
 
-      LazyTree.new(root_root, combined_children)
-    end
+    #   LazyTree.new(root_root, combined_children)
+    # end
 
     def self.wrap(val)
       LazyTree.new(val)

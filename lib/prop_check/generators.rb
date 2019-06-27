@@ -61,7 +61,7 @@ module PropCheck
     # and become more extreme (both higher and lower, negative) when `size` increases.
     #
     #   >> Generators.integer.call(2, Random.new(42))
-    #   => 2
+    #   => 1
     #   >> Generators.integer.call(10000, Random.new(42))
     #   => 5795
     #   >> r = Random.new(42); 10.times.map { Generators.integer.call(20000, r) }
@@ -127,7 +127,7 @@ module PropCheck
     # Generates a single-character string
     # from the readable ASCII character set.
     #
-    #   >> r = Random.new(42); 10.times.map{choose(32..128).map(&:chr).call(10, r) }
+    #   >> r = Random.new(42); 10.times.map{Generators.choose(32..128).map(&:chr).call(10, r) }
     #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
     def readable_ascii_char
       choose(32..128).map(&:chr)
@@ -147,7 +147,7 @@ module PropCheck
     # (representing the relative frequency of this generator)
     # and values to be generators.
     #
-    #   >> r = Random.new(42); 10.times.map { Generators.frequency(5 => Generators.integer, 1 => Generators.char).call(10, r) }
+    #   >> r = Random.new(42); 10.times.map { Generators.frequency(5 => Generators.integer, 1 => Generators.readable_ascii_char).call(10, r) }
     #   => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
     def frequency(frequencies)
       choices = frequencies.reduce([]) do |acc, elem|
@@ -162,7 +162,7 @@ module PropCheck
     # in the same order as specified:
     #
     #   >> Generators.tuple(Generators.integer, Generators.float).call(10, Random.new(42))
-    #   => [-4, 3.1415]
+    #   => [0, -2.2]
     def tuple(*generators)
       generators.reduce(Generator.wrap([])) do |acc, generator|
         generator.bind do |val|
@@ -185,7 +185,7 @@ module PropCheck
     # with the same keys, and their corresponding values from their corresponding generators.
     #
     #    >> Generators.fixed_hash(a: Generators.integer(), b: Generators.float(), c: Generators.integer()).call(10, Random.new(42))
-    #    => {:a=>-3, :b=>13.0, :c=>-4}
+    #    => {:a=>-4, :b=>13.0, :c=>-3}
     def fixed_hash(hash)
       keypair_generators =
         hash.map do |key, generator|
