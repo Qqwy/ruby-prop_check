@@ -86,7 +86,7 @@ RSpec.describe PropCheck do
     describe "#check" do
       it "generates an error that Rspec can pick up" do
         expect do
-          PropCheck.forall(x: PropCheck::Generators.integer) do
+          PropCheck.forall(x: PropCheck::Generators.nonnegative_integer) do
             expect(x).to be < 100
           end
         end.to raise_error do |error|
@@ -106,14 +106,14 @@ RSpec.describe PropCheck do
 
     describe "#where" do
       it "filters results" do
-        PropCheck.forall(y: PropCheck::Generators.integer, x: PropCheck::Generators.integer).where { x != y}.check do
+        PropCheck.forall(y: PropCheck::Generators.integer, x: PropCheck::Generators.positive_integer).where { x != y}.check do
           expect(x).to_not eq y
         end
       end
 
       it "raises an error if too much was filtered" do
         expect do
-          PropCheck.forall(x: PropCheck::Generators.integer).where {x == 0}.check do
+          PropCheck.forall(x: PropCheck::Generators.nonpositive_integer).where {x == 0}.check do
           end
         end.to raise_error do |error|
           expect(error).to be_a(PropCheck::GeneratorExhaustedError)
@@ -124,7 +124,7 @@ RSpec.describe PropCheck do
 
       it "crashes when doing bullshit in the where block" do
         expect do
-          PropCheck.forall(x: PropCheck::Generators.integer).where {x.unexistentmethod == 3}.check do
+          PropCheck.forall(x: PropCheck::Generators.negative_integer).where {x.unexistentmethod == 3}.check do
           end
         end.to raise_error do |error|
           expect(error).to be_a(NoMethodError)
