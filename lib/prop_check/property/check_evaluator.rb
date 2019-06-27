@@ -1,5 +1,6 @@
 module PropCheck
   class Property
+    ##
     # A wrapper class that implements the 'Cloaker' concept
     # which allows us to refer to variables set in 'bindings',
     # while still being able to access things that are only in scope
@@ -26,13 +27,26 @@ module PropCheck
         end
       end
 
+      # :nocov:
+      # SimpleCov seems to be having problems with `method_missing`
+      # An issue has been made; see https://github.com/colszowka/simplecov/issues/728
+      # Rest assured: these two methods are _definitely_ being called,
+      # since they are heavily exercised in the test suite.
+
+      ##
+      # Dispatches to caller whenever something is not part of `bindings`.
+      # (No need to invoke this method manually)
       def method_missing(method, *args, &block)
         super || @caller.__send__(method, *args, &block)
       end
 
+      ##
+      # Checks respond_to of caller whenever something is not part of `bindings`.
+      # (No need to invoke this method manually)
       def respond_to_missing?(*args)
         super || @caller.respond_to?(*args)
       end
+      # :nocov
     end
   end
 end

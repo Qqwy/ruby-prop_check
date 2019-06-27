@@ -132,6 +132,13 @@ RSpec.describe PropCheck do
           expect(defined?(error.prop_check_info)).to be_nil
         end
       end
+
+      it "foo" do
+        x = 10
+        PropCheck::Property::CheckEvaluator.new({y: 2}) do
+          p [x, y]
+        end.call
+      end
     end
   end
 end
