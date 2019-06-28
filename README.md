@@ -113,3 +113,9 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the PropCheck project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/prop_check/blob/master/CODE_OF_CONDUCT.md).
+
+## Attribution and Thanks
+
+I want to thank the original creators of QuickCheck (Koen Claessen, John Hughes) as well as the authors of many great property testing libraries that I was/am able to use as inspiration.
+I also want to greatly thank Thomasz Kowal who made me excited about property based testing [with his great talk about stateful property testing](https://www.youtube.com/watch?v=q0wZzFUYCuM), 
+as well as Fred Herbert for his great book [Property-Based Testing with PropEr, Erlang and Elixir](https://propertesting.com/) which is really worth the read (regardless of what language you are using).
