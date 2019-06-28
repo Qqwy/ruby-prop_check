@@ -99,7 +99,7 @@ RSpec.describe PropCheck do
           expect(error.message).to match(/Shrunken exception:/m)
 
           expect(defined?(error.prop_check_info)).to eq("method")
-          p error.prop_check_info
+          # p error.prop_check_info
         end
       end
     end
@@ -133,11 +133,25 @@ RSpec.describe PropCheck do
         end
       end
 
-      it "foo" do
-        x = 10
-        PropCheck::Property::CheckEvaluator.new({y: 2}) do
-          p [x, y]
-        end.call
+    end
+
+    describe "Property" do
+      describe "CheckEvaluator" do
+        it "forwards through method_missing when methods on outer scope are being called" do
+          expect do
+            x = 10
+            def call_me(input)
+              input + 1234
+            end
+            c = PropCheck::Property::CheckEvaluator.new({y: 2}) do
+              x = call_me(y)
+            end
+            expect(c.respond_to?(:call_me)).to be true
+            c.call
+
+            expect(x).to be(1234 + 2)
+          end.not_to raise_error
+        end
       end
     end
   end
