@@ -13,14 +13,15 @@ It features:
 
 Before releasing this gem on Rubygems, the following things need to be finished:
 
-- Finalize the testing DSL.
-- Testing the library itself (against known 'true' axiomatically correct Ruby code.)
-- Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
-- Customization of common settings
- - Filtering generators. 
-  - Customize the max. of samples to run.
-  - Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
-  
+- [x]  Finalize the testing DSL.
+- [x] Testing the library itself (against known 'true' axiomatically correct Ruby code.)
+- [x] Customization of common settings
+ - [x] Filtering generators. 
+  - [x] Customize the max. of samples to run.
+  - [x] Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
+ - [ ] Look into customization of settings from e.g. command line arguments.
+- [ ] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
+
 # Nice-to-haves
  
  - `aggregate` , `resize` and similar generator-modifying calls (c.f. PropEr's variants of these) which will help with introspection/metrics.
