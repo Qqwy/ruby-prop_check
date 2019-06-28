@@ -27,7 +27,6 @@ module PropCheck
         end
       end
 
-      # :nocov:
       # SimpleCov seems to be having problems with `method_missing`
       # An issue has been made; see https://github.com/colszowka/simplecov/issues/728
       # Rest assured: these two methods are _definitely_ being called,
@@ -37,6 +36,10 @@ module PropCheck
       # Dispatches to caller whenever something is not part of `bindings`.
       # (No need to invoke this method manually)
       def method_missing(method, *args, &block)
+        puts "-" * 80
+        puts "such calling many wow"
+        raise "not called"
+
         super || @caller.__send__(method, *args, &block)
       end
 
@@ -44,9 +47,12 @@ module PropCheck
       # Checks respond_to of caller whenever something is not part of `bindings`.
       # (No need to invoke this method manually)
       def respond_to_missing?(*args)
+        puts "-" * 80
+        puts "such calling many wow"
+        raise "not called"
+
         super || @caller.respond_to?(*args)
       end
-      # :nocov
     end
   end
 end

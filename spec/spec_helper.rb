@@ -1,5 +1,6 @@
 require "bundler/setup"
 require 'simplecov'
+puts "starting simplecov"
 SimpleCov.start
 
 require "prop_check"
