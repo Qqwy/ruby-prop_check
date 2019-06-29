@@ -10,20 +10,19 @@ module PropCheck
       max_shrink_steps: 10_000
     }
 
-    def self.forall(name = '', **bindings, &block)
+    def self.forall(**bindings, &block)
 
-      property = new(name, bindings)
+      property = new(bindings)
 
       return property.check(&block) if block_given?
 
       property
     end
 
-    attr_reader :name, :bindings, :condition, :settings
-    def initialize(name = '', **bindings)
+    attr_reader :bindings, :condition, :settings
+    def initialize(**bindings)
       raise ArgumentError, 'No bindings specified!' if bindings.empty?
 
-      @name = name
       @bindings = bindings
       @condition = -> { true }
       @settings = @@default_settings
