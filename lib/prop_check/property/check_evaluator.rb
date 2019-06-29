@@ -12,13 +12,13 @@ module PropCheck
       include RSpec::Matchers if Object.const_defined?('RSpec')
 
       def initialize(bindings, &block)
-        @caller = eval 'self', block.binding, __FILE__, __LINE__
+        @caller = block.binding.receiver
         @block = block
         define_named_instance_methods(bindings)
       end
 
       def call
-        instance_exec(&@block)
+        self.instance_exec(&@block)
       end
 
       private def define_named_instance_methods(results)
@@ -27,26 +27,19 @@ module PropCheck
         end
       end
 
-      # :nocov:
-      # SimpleCov seems to be having problems with `method_missing`
-      # An issue has been made; see https://github.com/colszowka/simplecov/issues/728
-      # Rest assured: these two methods are _definitely_ being called,
-      # since they are heavily exercised in the test suite.
-
       ##
       # Dispatches to caller whenever something is not part of `bindings`.
       # (No need to invoke this method manually)
       def method_missing(method, *args, &block)
-        super || @caller.__send__(method, *args, &block)
+        @caller.__send__(method, *args, &block) || super
       end
 
       ##
       # Checks respond_to of caller whenever something is not part of `bindings`.
       # (No need to invoke this method manually)
       def respond_to_missing?(*args)
-        super || @caller.respond_to?(*args)
+        @caller.respond_to?(*args) || super
       end
-      # :nocov
     end
   end
 end

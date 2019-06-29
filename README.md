@@ -13,14 +13,16 @@ It features:
 
 Before releasing this gem on Rubygems, the following things need to be finished:
 
-- Finalize the testing DSL.
-- Testing the library itself (against known 'true' axiomatically correct Ruby code.)
-- Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
-- Customization of common settings
- - Filtering generators. 
-  - Customize the max. of samples to run.
-  - Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
-  
+- [x]  Finalize the testing DSL.
+- [x] Testing the library itself (against known 'true' axiomatically correct Ruby code.)
+- [x] Customization of common settings
+ - [x] Filtering generators. 
+  - [x] Customize the max. of samples to run.
+  - [x] Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
+ - [x] Look into customization of settings from e.g. command line arguments.
+- [ ] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
+- [ ] Good, unicode-compliant, string generators.
+
 # Nice-to-haves
  
  - `aggregate` , `resize` and similar generator-modifying calls (c.f. PropEr's variants of these) which will help with introspection/metrics.
@@ -112,3 +114,9 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the PropCheck project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/prop_check/blob/master/CODE_OF_CONDUCT.md).
+
+## Attribution and Thanks
+
+I want to thank the original creators of QuickCheck (Koen Claessen, John Hughes) as well as the authors of many great property testing libraries that I was/am able to use as inspiration.
+I also want to greatly thank Thomasz Kowal who made me excited about property based testing [with his great talk about stateful property testing](https://www.youtube.com/watch?v=q0wZzFUYCuM), 
+as well as Fred Herbert for his great book [Property-Based Testing with PropEr, Erlang and Elixir](https://propertesting.com/) which is really worth the read (regardless of what language you are using).
