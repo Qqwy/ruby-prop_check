@@ -19,7 +19,7 @@ Before releasing this gem on Rubygems, the following things need to be finished:
  - [x] Filtering generators. 
   - [x] Customize the max. of samples to run.
   - [x] Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
- - [ ] Look into customization of settings from e.g. command line arguments.
+ - [x] Look into customization of settings from e.g. command line arguments.
 - [ ] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
 
 # Nice-to-haves

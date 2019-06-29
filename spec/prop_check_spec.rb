@@ -47,7 +47,6 @@ RSpec.describe PropCheck do
         shrunken_val = nil
 
         expect do
-
           PropCheck.forall(x: PropCheck::Generators.float) do
             if x > 3.1415
               exploding_val ||= x
@@ -72,14 +71,14 @@ RSpec.describe PropCheck do
   end
 
   describe "Property" do
-    describe "#with_settings" do
-      it "updates the settings" do
+    describe "#with_config" do
+      it "updates the configuration" do
         p = PropCheck.forall(x: PropCheck::Generators.integer)
-        expect(p.settings[:verbose]).to be false
-        expect(p.with_settings(verbose: true).settings[:verbose]).to be true
+        expect(p.configuration[:verbose]).to be false
+        expect(p.with_config(verbose: true).configuration[:verbose]).to be true
       end
       it "Runs the property test when called with a block" do
-        expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_settings({}, &block) }.to yield_control
+        expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_config({}, &block) }.to yield_control
       end
     end
 
@@ -151,6 +150,16 @@ RSpec.describe PropCheck do
 
             expect(x).to be(1234 + 2)
           end.not_to raise_error
+        end
+      end
+
+      describe ".configure" do
+        it "configures all checks done from that point onward" do
+          PropCheck::Property.configure do |config|
+            config.n_runs = 42
+          end
+
+          expect(PropCheck::forall(foo: PropCheck::Generators.integer).configuration.n_runs).to be 42
         end
       end
     end

@@ -1,14 +1,9 @@
 require 'stringio'
 
+require 'prop_check/property/configuration'
 require 'prop_check/property/check_evaluator'
 module PropCheck
   class Property
-    @@default_settings = {
-      verbose: false,
-      n_runs: 1_000,
-      max_generate_attempts: 10_000,
-      max_shrink_steps: 10_000
-    }
 
     def self.forall(name = '', **bindings, &block)
 
@@ -19,18 +14,32 @@ module PropCheck
       property
     end
 
-    attr_reader :name, :bindings, :condition, :settings
+    def self.configuration
+      @configuration ||= Configuration.new
+    end
+
+    def self.configure
+      yield(configuration)
+    end
+
+    attr_reader :name, :bindings, :condition
+
+
     def initialize(name = '', **bindings)
       raise ArgumentError, 'No bindings specified!' if bindings.empty?
 
       @name = name
       @bindings = bindings
       @condition = -> { true }
-      @settings = @@default_settings
+      @config = self.class.configuration
     end
 
-    def with_settings(**settings, &block)
-      @settings = @settings.merge(settings)
+    def configuration
+      @config
+    end
+
+    def with_config(**config, &block)
+      @config = @config.merge(config)
 
       return self.check(&block) if block_given?
 
@@ -61,11 +70,11 @@ module PropCheck
     end
 
     private def ensure_not_exhausted!(n_runs)
-      return if n_runs >= @settings[:n_runs]
+      return if n_runs >= @config.n_runs
 
       raise GeneratorExhaustedError, """
-        Could not perform `n_runs = #{@settings[:n_runs]}` runs,
-        (exhausted #{@settings[:max_generate_attempts]} tries)
+        Could not perform `n_runs = #{@config.n_runs}` runs,
+        (exhausted #{@config.max_generate_attempts} tries)
         because too few generator results were adhering to
         the `where` condition.
 
@@ -107,7 +116,7 @@ module PropCheck
       rng = Random::DEFAULT
       n_runs = 0
       size = 1
-      (0...@settings[:max_generate_attempts])
+      (0...@config.max_generate_attempts)
         .lazy
         .map { binding_generator.generate(size, rng) }
         .select { |val| CheckEvaluator.new(val.root, &@condition).call }
@@ -117,11 +126,11 @@ module PropCheck
 
           result
         end
-        .take_while { n_runs <= @settings[:n_runs] }
+        .take_while { n_runs <= @config.n_runs }
     end
 
     private def show_problem_output(problem, generator_results, n_successful, &block)
-      output = @settings[:verbose] ? STDOUT : StringIO.new
+      output = @config.verbose ? STDOUT : StringIO.new
       output = pre_output(output, n_successful, generator_results.root, problem)
       shrunken_result, shrunken_exception, n_shrink_steps = shrink2(generator_results, output, &block)
       output = post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
@@ -161,13 +170,13 @@ module PropCheck
     end
 
     private def shrink2(bindings_tree, io, &fun)
-      io.puts 'Shrinking...' if @settings[:verbose]
+      io.puts 'Shrinking...' if @config.verbose
       problem_child = bindings_tree
       siblings = problem_child.children.lazy
       parent_siblings = nil
       problem_exception = nil
       shrink_steps = 0
-      (0..@settings[:max_shrink_steps]).each do
+      (0..@config.max_shrink_steps).each do
         begin
           sibling = siblings.next
         rescue StopIteration
@@ -179,7 +188,7 @@ module PropCheck
         end
 
         shrink_steps += 1
-        io.print '.' if @settings[:verbose]
+        io.print '.' if @config.verbose
 
         begin
           CheckEvaluator.new(sibling.root, &fun).call
@@ -191,7 +200,7 @@ module PropCheck
         end
       end
 
-      io.puts "(Note: Exceeded #{@settings[:max_shrink_steps]} shrinking steps, the maximum.)" if shrink_steps >= @settings[:max_shrink_steps]
+      io.puts "(Note: Exceeded #{@config.max_shrink_steps} shrinking steps, the maximum.)" if shrink_steps >= @config.max_shrink_steps
 
       [problem_child.root, problem_exception, shrink_steps]
     end
