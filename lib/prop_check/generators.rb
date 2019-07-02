@@ -17,17 +17,19 @@ module PropCheck
     end
 
     private def integer_shrink(val)
-      # 0 cannot shrink further
+      # 0 cannot shrink further; base case
       return [] if val.zero?
 
       # Numbers are shrunken by
-      # subtracting themselves, their half, quarter, eight, ... (rounded towards zero!) from themselves, until the number itself is reached.
+      # subtracting themselves, their half, quarter, eight, ... (rounded towards zero!)
+      # from themselves, until the number itself is reached.
       # So: for 20 we have [0, 10, 15, 18, 19, 20]
       halvings =
-        Helper.scanl(val) { |x| (x / 2.0).truncate }
-          .take_while { |x| !x.zero? }
-          .map { |x| val - x }
-          .map { |x| LazyTree.new(x, integer_shrink(x)) }
+        Helper
+        .scanl(val) { |x| (x / 2.0).truncate }
+        .take_while { |x| !x.zero? }
+        .map { |x| val - x }
+        .map { |x| LazyTree.new(x, integer_shrink(x)) }
 
       # For negative numbers, we also attempt if the positive number has the same result.
       if val.abs > val
@@ -102,8 +104,8 @@ module PropCheck
       positive_integer.map(&:-@)
     end
 
-    private def fraction(a, b, c)
-      a.to_f + b.to_f / (c.to_f.abs + 1.0)
+    private def fraction(num_a, num_b, num_c)
+      num_a.to_f + num_b.to_f / (num_c.to_f.abs + 1.0)
     end
 
     ##
@@ -125,20 +127,10 @@ module PropCheck
     end
 
     ##
-    # Generates a single-character string
-    # from the readable ASCII character set.
-    #
-    #   >> Generators.choose(32..128).map(&:chr).sample(size: 10, rng: Random.new(42))
-    #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
-    def readable_ascii_char
-      choose(32..128).map(&:chr)
-    end
-
-    ##
     # Picks one of the given `choices` at random uniformly every time.
     def one_of(*choices)
       choose(choices.length).bind do |index|
-        choices[index]
+        constant(choices[index])
       end
     end
 
@@ -148,14 +140,16 @@ module PropCheck
     # (representing the relative frequency of this generator)
     # and values to be generators.
     #
-    #   >> r = Random.new(42); 10.times.map { Generators.frequency(5 => Generators.integer, 1 => Generators.readable_ascii_char).call(10, r) }
+    #   >> Generators.frequency(5 => Generators.integer, 1 => Generators.readable_ascii_char).sample(size: 10, rng: Random.new(42))
     #   => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
     def frequency(frequencies)
       choices = frequencies.reduce([]) do |acc, elem|
         freq, val = elem
         acc + ([val] * freq)
       end
-      one_of(*choices)
+      one_of(*choices).bind do |chosen_generator|
+        chosen_generator
+      end
     end
 
     ##
@@ -221,12 +215,40 @@ module PropCheck
         .map(&:to_h)
     end
 
+
+    @alphanumeric_char = [('a'..'z'), ('A'..'Z'), ('0'..'9')].flat_map(&:to_a).freeze
+    ##
+    # Generates a single-character string
+    # containing one of a..z, A..Z, 0..9
+    def alphanumeric_char
+      one_of(*@alphanumeric_char)
+    end
+
+    ##
+    # Generates a string
+    # containing only the characters a..z, A..Z, 0..9
+    def alphanumeric_string
+      array(alphanumeric_char).map(&:join)
+    end
+
+
+    ##
+    # Generates a single-character string
+    # from the readable ASCII character set.
+    #
+    #   >> Generators.readable_ascii_char.sample(size: 10, rng: Random.new(42))
+    #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
+    def readable_ascii_char
+      one_of(*(' '.."~"))
+    end
+
     def readable_ascii_string
       array(readable_ascii_char).map(&:join)
     end
 
-    # TODO string
-    # TODO unicode
-    # TODO sets?
+
+    # TODO: string
+    # TODO: unicode
+    # TODO: sets?
   end
 end

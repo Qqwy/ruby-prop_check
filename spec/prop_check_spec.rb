@@ -3,7 +3,7 @@ RSpec.describe PropCheck do
     expect(PropCheck::VERSION).not_to be nil
   end
 
-  describe "PropCheck" do
+  describe PropCheck do
     describe ".forall" do
       it "returns a Property when called without a block" do
         expect(PropCheck.forall(x: PropCheck::Generators.integer)).to be_a(PropCheck::Property)
@@ -68,73 +68,71 @@ RSpec.describe PropCheck do
         end
       end
     end
-  end
-
-  describe "Property" do
-    describe "#with_config" do
-      it "updates the configuration" do
-        p = PropCheck.forall(x: PropCheck::Generators.integer)
-        expect(p.configuration[:verbose]).to be false
-        expect(p.with_config(verbose: true).configuration[:verbose]).to be true
-      end
-      it "Runs the property test when called with a block" do
-        expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_config({}, &block) }.to yield_control
-      end
-    end
-
-    describe "#check" do
-      it "generates an error that Rspec can pick up" do
-        expect do
-          PropCheck.forall(x: PropCheck::Generators.nonnegative_integer) do
-            expect(x).to be < 100
-          end
-        end.to raise_error do |error|
-          expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
-          expect(error.message).to match(/\(after \d+ successful property test runs\)/m)
-          expect(error.message).to match(/Exception message:/m)
-
-          # Test basic shrinking real quick:
-          expect(error.message).to match(/Shrunken input \(after \d+ shrink steps\):\n`x = 100`/m)
-          expect(error.message).to match(/Shrunken exception:/m)
-
-          expect(defined?(error.prop_check_info)).to eq("method")
-          # p error.prop_check_info
-        end
-      end
-    end
-
-    describe "#where" do
-      it "filters results" do
-        PropCheck.forall(y: PropCheck::Generators.integer, x: PropCheck::Generators.positive_integer).where { x != y}.check do
-          expect(x).to_not eq y
-        end
-      end
-
-      it "raises an error if too much was filtered" do
-        expect do
-          PropCheck.forall(x: PropCheck::Generators.nonpositive_integer).where {x == 0}.check do
-          end
-        end.to raise_error do |error|
-          expect(error).to be_a(PropCheck::GeneratorExhaustedError)
-          # Check for no shrinking:
-          expect(defined?(error.prop_check_info)).to be_nil
-        end
-      end
-
-      it "crashes when doing bullshit in the where block" do
-        expect do
-          PropCheck.forall(x: PropCheck::Generators.negative_integer).where {x.unexistentmethod == 3}.check do
-          end
-        end.to raise_error do |error|
-          expect(error).to be_a(NoMethodError)
-          # Check for no shrinking:
-          expect(defined?(error.prop_check_info)).to be_nil
-        end
-      end
-
-    end
 
     describe "Property" do
+      describe "#with_config" do
+        it "updates the configuration" do
+          p = PropCheck.forall(x: PropCheck::Generators.integer)
+          expect(p.configuration[:verbose]).to be false
+          expect(p.with_config(verbose: true).configuration[:verbose]).to be true
+        end
+        it "Runs the property test when called with a block" do
+          expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_config({}, &block) }.to yield_control
+        end
+      end
+
+      describe "#check" do
+        it "generates an error that Rspec can pick up" do
+          expect do
+            PropCheck.forall(x: PropCheck::Generators.nonnegative_integer) do
+              expect(x).to be < 100
+            end
+          end.to raise_error do |error|
+            expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
+            expect(error.message).to match(/\(after \d+ successful property test runs\)/m)
+            expect(error.message).to match(/Exception message:/m)
+
+            # Test basic shrinking real quick:
+            expect(error.message).to match(/Shrunken input \(after \d+ shrink steps\):\n`x = 100`/m)
+            expect(error.message).to match(/Shrunken exception:/m)
+
+            expect(defined?(error.prop_check_info)).to eq("method")
+            # p error.prop_check_info
+          end
+        end
+      end
+
+      describe "#where" do
+        it "filters results" do
+          PropCheck.forall(y: PropCheck::Generators.integer, x: PropCheck::Generators.positive_integer).where { x != y}.check do
+            expect(x).to_not eq y
+          end
+        end
+
+        it "raises an error if too much was filtered" do
+          expect do
+            PropCheck.forall(x: PropCheck::Generators.nonpositive_integer).where {x == 0}.check do
+            end
+          end.to raise_error do |error|
+            expect(error).to be_a(PropCheck::GeneratorExhaustedError)
+            # Check for no shrinking:
+            expect(defined?(error.prop_check_info)).to be_nil
+          end
+        end
+
+        it "crashes when doing bullshit in the where block" do
+          expect do
+            PropCheck.forall(x: PropCheck::Generators.negative_integer).where {x.unexistentmethod == 3}.check do
+            end
+          end.to raise_error do |error|
+            expect(error).to be_a(NoMethodError)
+            # Check for no shrinking:
+            expect(defined?(error.prop_check_info)).to be_nil
+          end
+        end
+
+      end
+
       describe "CheckEvaluator" do
         it "forwards through method_missing when methods on outer scope are being called" do
           expect do
@@ -161,6 +159,22 @@ RSpec.describe PropCheck do
 
           expect(PropCheck::forall(foo: PropCheck::Generators.integer).configuration.n_runs).to be 42
         end
+      end
+    end
+    describe RSpec do
+      require 'prop_check/rspec'
+      extend PropCheck::RSpec
+      it "adds forall to the example scope" do
+        thing = nil
+        forall(x: PropCheck::Generators.integer) do
+          expect(x).to be_a(Integer)
+          thing = true
+        end
+        expect(thing).to be true
+      end
+
+      it "runs before and after hooks with `:each_prop_check_iteration` context before/after each PropCheck iteration." do
+        # TODO
       end
     end
   end
