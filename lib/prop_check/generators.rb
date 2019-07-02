@@ -140,7 +140,7 @@ module PropCheck
     # (representing the relative frequency of this generator)
     # and values to be generators.
     #
-    #   >> Generators.frequency(5 => Generators.integer, 1 => Generators.readable_ascii_char).sample(size: 10, rng: Random.new(42))
+    #   >> Generators.frequency(5 => Generators.integer, 1 => Generators.printable_ascii_char).sample(size: 10, rng: Random.new(42))
     #   => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
     def frequency(frequencies)
       choices = frequencies.reduce([]) do |acc, elem|
@@ -208,7 +208,7 @@ module PropCheck
     #
     # Shrinks to hashes with less key/value pairs.
     #
-    #    >> Generators.hash(Generators.readable_ascii_string, Generators.positive_integer).sample(5, size: 3, rng: Random.new(42))
+    #    >> Generators.hash(Generators.printable_ascii_string, Generators.positive_integer).sample(5, size: 3, rng: Random.new(42))
     #    => [{""=>2, "g\\4"=>4, "rv"=>2}, {"7"=>2}, {"!"=>1, "E!"=>1}, {"kY5"=>2}, {}]
     def hash(key_generator, value_generator)
       array(tuple(key_generator, value_generator))
@@ -244,11 +244,11 @@ module PropCheck
     end
 
     def printable_ascii_string
-      array(readable_ascii_char).map(&:join)
+      array(printable_ascii_char).map(&:join)
     end
 
     @ascii_chars = [
-      @readable_ascii_chars,
+      @printable_ascii_chars,
       [
         "\n",
         "\r",
@@ -305,7 +305,5 @@ module PropCheck
     def string
       array(char).map(&:join)
     end
-
-    # TODO: sets?
   end
 end
