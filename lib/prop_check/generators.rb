@@ -216,12 +216,12 @@ module PropCheck
     end
 
 
-    @alphanumeric_char = [('a'..'z'), ('A'..'Z'), ('0'..'9')].flat_map(&:to_a).freeze
+    @alphanumeric_chars = [('a'..'z'), ('A'..'Z'), ('0'..'9')].flat_map(&:to_a).freeze
     ##
     # Generates a single-character string
     # containing one of a..z, A..Z, 0..9
     def alphanumeric_char
-      one_of(*@alphanumeric_char)
+      one_of(*@alphanumeric_chars)
     end
 
     ##
@@ -234,21 +234,78 @@ module PropCheck
 
     ##
     # Generates a single-character string
-    # from the readable ASCII character set.
+    # from the printable ASCII character set.
     #
-    #   >> Generators.readable_ascii_char.sample(size: 10, rng: Random.new(42))
+    #   >> Generators.printable_ascii_char.sample(size: 10, rng: Random.new(42))
     #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
-    def readable_ascii_char
-      one_of(*(' '.."~"))
+    @printable_ascii_chars = (' '..'~').to_a.freeze
+    def printable_ascii_char
+      one_of(*@printable_ascii_chars)
     end
 
-    def readable_ascii_string
+    def printable_ascii_string
       array(readable_ascii_char).map(&:join)
     end
 
+    @ascii_chars = [
+      @readable_ascii_chars,
+      [
+        "\n",
+        "\r",
+        "\t",
+        "\v",
+        "\b",
+        "\f",
+        "\e",
+        "\d",
+        "\a"
+      ]
+    ].flat_map(&:to_a).freeze
+    def ascii_char
+      one_of(*@ascii_chars)
+    end
 
-    # TODO: string
-    # TODO: unicode
+    def ascii_string
+      array(ascii_char).map(&:join)
+    end
+
+    @printable_chars = [
+      @ascii_chars,
+      "\u{A0}".."\u{D7FF}",
+      "\u{E000}".."\u{FFFD}",
+      "\u{10000}".."\u{10FFFF}"
+    ].flat_map(&:to_a).freeze
+
+    ##
+    # Generates a single-character printable string
+    # both ASCII characters and Unicode.
+    def printable_char
+      one_of(*@printable_chars)
+    end
+
+    ##
+    # Generates a printable string
+    # both ASCII characters and Unicode.
+    def printable_string
+      array(printable_char).map(&:join)
+    end
+
+    ##
+    # Generates a single unicode character
+    # (both printable and non-printable).
+    def char
+      choose(0..0x10FFFF).map do |num|
+        [num].pack('U')
+      end
+    end
+
+    ##
+    # Generates a string of unicode characters
+    # (which might contain both printable and non-printable characters).
+    def string
+      array(char).map(&:join)
+    end
+
     # TODO: sets?
   end
 end
