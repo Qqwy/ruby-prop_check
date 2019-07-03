@@ -117,7 +117,7 @@ module PropCheck
       (0...@config.max_generate_attempts)
         .lazy
         .map { binding_generator.generate(size, rng) }
-        .reject(&:nil?) # Removes filtered results
+        .reject { |val| val.root == :"_PropCheck.filter_me" }
         .select { |val| CheckEvaluator.new(val.root, &@condition).call }
         .map do |result|
           n_runs += 1

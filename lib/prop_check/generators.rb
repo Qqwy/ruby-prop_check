@@ -305,5 +305,49 @@ module PropCheck
     def string
       array(char).map(&:join)
     end
+
+    ##
+    # Generates either `true` or `false`
+    def boolean
+      one_of(false, true)
+    end
+
+    ##
+    # Generates always `nil`.
+    def nil
+      constant(nil)
+    end
+
+    ##
+    # Generates `nil` or `false`.
+    def falsey
+      one_of(nil, false)
+    end
+
+    ##
+    # Generates common terms that are not `nil` or `false`.
+    def truthy
+      one_of(true,
+             constant([]),
+             char,
+             integer,
+             float,
+             string,
+             array(integer),
+             array(float),
+             array(char),
+             array(string),
+             hash(symbol, integer),
+             hash(string, integer),
+             hash(string, string)
+            )
+    end
+
+    ##
+    # Generates whatever `other_generator` generates
+    # but sometimes instead `nil`.`
+    def nillable(other_generator)
+      frequency(9 => other_generator, 1 => nil)
+    end
   end
 end

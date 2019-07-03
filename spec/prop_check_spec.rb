@@ -172,10 +172,6 @@ RSpec.describe PropCheck do
         end
         expect(thing).to be true
       end
-
-      it "runs before and after hooks with `:each_prop_check_iteration` context before/after each PropCheck iteration." do
-        # TODO
-      end
     end
   end
 end
