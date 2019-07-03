@@ -173,8 +173,19 @@ RSpec.describe PropCheck do
         expect(thing).to be true
       end
 
-      it "runs before and after hooks with `:each_prop_check_iteration` context before/after each PropCheck iteration." do
-        # TODO
+      describe "the hooks" do
+        include ::PropCheck::RSpec
+        # p method(:before)
+        # p ancestors
+        outer_val = 0
+        before(:each_prop_check_iteration) do
+          outer_val = x
+        end
+        it "runs before and after hooks with `:each_prop_check_iteration` context before/after each PropCheck iteration." do
+          forall(x: PropCheck::Generators.integer) do
+            expect(outer_val).to be x
+          end
+        end
       end
     end
   end
