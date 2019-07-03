@@ -3,6 +3,7 @@
 PropCheck allows you to do Property Testing in Ruby.
 
 [![Gem](https://img.shields.io/gem/v/prop_check.svg)](https://rubygems.org/gems/prop_check)
+[![Build Status](https://travis-ci.org/Qqwy/ruby-prop_check.svg?branch=master)](https://travis-ci.org/Qqwy/ruby-prop_check)
 
 It features:
 
