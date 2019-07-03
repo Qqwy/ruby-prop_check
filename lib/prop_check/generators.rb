@@ -126,6 +126,8 @@ module PropCheck
     #
     # Shrinks to numbers closer to zero.
     #
+    #    >> Generators.real_float().sample(10, size: 10, rng: Random.new(42))
+    #    => [-2.2, -0.2727272727272727, 4.0, 1.25, -3.7272727272727275, -8.833333333333334, -8.090909090909092, 1.1428571428571428, 0.0, 8.0]
     def real_float
       tuple(integer, integer, integer).map do |a, b, c|
         fraction(a, b, c)
