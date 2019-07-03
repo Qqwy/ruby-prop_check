@@ -21,13 +21,14 @@ Before releasing this gem on Rubygems, the following things need to be finished:
   - [x] Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
  - [x] Look into customization of settings from e.g. command line arguments.
 - [x] Good, unicode-compliant, string generators.
-- [ ] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
+- [ ] Filtering generator outputs.
 
 # Nice-to-haves
  
- - `aggregate` , `resize` and similar generator-modifying calls (c.f. PropEr's variants of these) which will help with introspection/metrics.
- - Integration with other Ruby test frameworks.
- - Stateful property testing. (A whole other can of worms, but super cool!)
+- [ ] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
+ - [ ] `aggregate` , `resize` and similar generator-modifying calls (c.f. PropEr's variants of these) which will help with introspection/metrics.
+ - [ ] Integration with other Ruby test frameworks.
+ - Stateful property testing. If implemented at some point, will probably happen in a separate add-on library.
 
 
 ## Installation
