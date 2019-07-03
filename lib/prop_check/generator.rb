@@ -20,6 +20,7 @@ module PropCheck
     ##
     # Given a `size` (integer) and a random number generator state `rng`,
     # generate a LazyTree.
+    # Will return `nil` if (and only if) the output was filtered.
     def generate(size = @@default_size, rng = @@default_rng)
       @block.call(size, rng)
     end
@@ -31,7 +32,7 @@ module PropCheck
     #   >> Generators.integer.call(1000, Random.new(42))
     #   => 126
     def call(size = @@default_size, rng = @@default_rng)
-      generate(size, rng).root
+      generate(size, rng)&.root
     end
 
     ##
@@ -39,8 +40,9 @@ module PropCheck
     # This is mostly useful for debugging if a generator behaves as you intend it to.
     def sample(num_of_samples = 10, size: @@default_size, rng: @@default_rng)
       num_of_samples.times.map do
-        call(size, rng)
+        generate(size, rng)&.root
       end
+      .compact
     end
 
     ##
@@ -89,6 +91,21 @@ module PropCheck
       Generator.new do |size, rng|
         result = self.generate(size, rng)
         result.map(&proc)
+      end
+    end
+
+    ##
+    # Creates a new Generator from an existing one
+    # whose return value will only be used when the condition block passed is truthy for its result.
+    #
+    # Note that:
+    # - this is a nice way to filter out a couple of unwanted inputs.
+    # - but if you filter out too much you might trigger generator exhaustion. In this case, consider using `map` instead.
+    def where(&condition)
+      bind do |result|
+        return nil unless condition.call(result)
+
+        wrap(result)
       end
     end
   end
