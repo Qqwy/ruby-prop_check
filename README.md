@@ -78,7 +78,29 @@ When a failure is found, PropCheck will re-run the block given to `forall` to te
 'smaller' inputs, in an attempt to give you a minimal counter-example,
 from which the problem can be easily understood.
 
-TODO example code+output here.
+For instance, when a failure happens with the input `x = 100`,
+PropCheck will see if the failure still happens with `x = 50`.
+If it does , it will try `x = 25`. If not, it will try `x = 75`, and so on.
+
+This means if something only goes wrong for `x = 2`, the program will try:
+- `x = 100`(fails),`
+- x = 50`(fails), 
+- `x = 25`(fails), 
+- `x = 12`(fails), 
+- `x = 6`(fails), 
+- `x = 3`(fails), 
+- `x = 1` (succeeds), `x = 2` (fails).
+
+and thus the simplified case of `x = 2` is shown in the output.
+
+The documentation of the provided generators explain how they shrink.
+A short summary:
+- Integers shrink to numbers closer to zero.
+- Negative integers also attempt their positive alternative.
+- Floats shrink similarly to integers.
+- Arrays and hashes shrink to fewer elements, as well as shrinking their elements.
+- Strings shrink to shorter strings, as well as characters earlier in their alphabet.
+
 
 ### Writing Custom Generators
 
@@ -91,11 +113,32 @@ PropCheck comes bundled with a bunch of common generators, for:
 - hashes
 etc.
 
-However, you of course have your own data-types in your project.
+However, you can easily adapt them to generate your own datatypes:
 
-Adapting one of the generators for your own datatype is easy.
+#### Generator#wrap
 
-(TODO expand on this)
+Always returns the given value. No shrinking.
+
+#### Generator#map
+
+Allows you to take the result of one generator and transform it into something else.
+    
+    >> Generators.choose(32..128).map(&:chr).call(10, Random.new(42))
+    => "S"
+
+#### Generator#bind
+
+Allows you to create one or another generator conditionally on the output of another generator.
+
+    >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
+    => [2, 79]
+
+
+#### Generators.one_of
+
+Useful if you want to be able to generate a value to be one of multiple possibilities:
+
+    >> one_of()
 
 
 ## Development

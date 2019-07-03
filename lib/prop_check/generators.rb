@@ -127,10 +127,13 @@ module PropCheck
     end
 
     ##
-    # Picks one of the given `choices` at random uniformly every time.
+    # Picks one of the given generators in `choices` at random uniformly every time.
+    #
+    #    >> Generators.one_of(Generators.constant(true), Generators.constant(false)).sample(5, size: 10, rng: Random.new(42))
+    #    => [true, false, true, true, true]
     def one_of(*choices)
       choose(choices.length).bind do |index|
-        constant(choices[index])
+        choices[index]
       end
     end
 
@@ -147,9 +150,7 @@ module PropCheck
         freq, val = elem
         acc + ([val] * freq)
       end
-      one_of(*choices).bind do |chosen_generator|
-        chosen_generator
-      end
+      one_of(*choices)
     end
 
     ##
@@ -221,7 +222,7 @@ module PropCheck
     # Generates a single-character string
     # containing one of a..z, A..Z, 0..9
     def alphanumeric_char
-      one_of(*@alphanumeric_chars)
+      one_of(*@alphanumeric_chars.map(&method(:constant)))
     end
 
     ##
@@ -240,7 +241,7 @@ module PropCheck
     #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
     @printable_ascii_chars = (' '..'~').to_a.freeze
     def printable_ascii_char
-      one_of(*@printable_ascii_chars)
+      one_of(*@printable_ascii_chars.map(&method(:constant)))
     end
 
     def printable_ascii_string
@@ -262,7 +263,7 @@ module PropCheck
       ]
     ].flat_map(&:to_a).freeze
     def ascii_char
-      one_of(*@ascii_chars)
+      one_of(*@ascii_chars.map(&method(:constant)))
     end
 
     def ascii_string
@@ -280,7 +281,7 @@ module PropCheck
     # Generates a single-character printable string
     # both ASCII characters and Unicode.
     def printable_char
-      one_of(*@printable_chars)
+      one_of(*@printable_chars.map(&method(:constant)))
     end
 
     ##
@@ -309,7 +310,7 @@ module PropCheck
     ##
     # Generates either `true` or `false`
     def boolean
-      one_of(false, true)
+      one_of(constant(false), constant(true))
     end
 
     ##
@@ -321,13 +322,13 @@ module PropCheck
     ##
     # Generates `nil` or `false`.
     def falsey
-      one_of(nil, false)
+      one_of(constant(nil), constant(false))
     end
 
     ##
     # Generates common terms that are not `nil` or `false`.
     def truthy
-      one_of(true,
+      one_of(constant(true),
              constant([]),
              char,
              integer,
@@ -347,7 +348,7 @@ module PropCheck
     # Generates whatever `other_generator` generates
     # but sometimes instead `nil`.`
     def nillable(other_generator)
-      frequency(9 => other_generator, 1 => nil)
+      frequency(9 => other_generator, 1 => constant(nil))
     end
   end
 end
