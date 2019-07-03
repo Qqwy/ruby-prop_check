@@ -116,25 +116,37 @@ module PropCheck
     end
 
     ##
-    # Generates floating point numbers
+    # Generates floating-point numbers
     # These start small (around 0)
     # and become more extreme (large positive and large negative numbers)
     #
+    # Will only generate 'reals',
+    # that is: no infinity, no NaN,
+    # no numbers testing the limits of floating-point arithmetic.
     #
     # Shrinks to numbers closer to zero.
     #
-    # TODO testing for NaN, Infinity?
-    def float
-      # integer.bind do |a|
-      #   integer.bind do |b|
-      #     integer.bind do |c|
-      #       Generator.wrap(fraction(a, b, c))
-      #     end
-      #   end
-      # end
+    def real_float
       tuple(integer, integer, integer).map do |a, b, c|
         fraction(a, b, c)
       end
+    end
+
+
+    @special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, 0.0.next_float, 0.0.prev_float]
+    ##
+    # Generates floating-point numbers
+    # Will generate NaN, Infinity, -Infinity,
+    # as well as Float::EPSILON, 0.0.next_float, 0.0.prev_float,
+    # to test the handling of floating-point edge cases.
+    # Approx. 1/100 generated numbers is a special one.
+    #
+    # Shrinks to smaller, real floats.
+    #    >> Generators.float().sample(10, size: 10, rng: Random.new(42))
+    #    => [4.0, 9.555555555555555, 0.0, -Float::INFINITY, 5.5, -5.818181818181818, 1.1428571428571428, 0.0, 8.0, 7.857142857142858]
+    def float
+
+      frequency(99 => real_float, 1 => one_of(*@special_floats.map(&method(:constant))))
     end
 
     ##
@@ -156,6 +168,9 @@ module PropCheck
     # (representing the relative frequency of this generator)
     # and values to be generators.
     #
+    # Side note: If you want to use the same frequency number for multiple generators,
+    # Ruby syntax requires you to send an array of two-element arrays instead of a hash.
+    #
     # Shrinks to arbitrary elements (since hashes are not ordered).
     #
     #   >> Generators.frequency(5 => Generators.integer, 1 => Generators.printable_ascii_char).sample(size: 10, rng: Random.new(42))
@@ -174,7 +189,7 @@ module PropCheck
     #
     # Shrinks element generators, one at a time (trying last one first).
     #
-    #   >> Generators.tuple(Generators.integer, Generators.float).call(10, Random.new(42))
+    #   >> Generators.tuple(Generators.integer, Generators.real_float).call(10, Random.new(42))
     #   => [-4, 13.0]
     def tuple(*generators)
       Generator.new do |size, rng|
@@ -191,7 +206,7 @@ module PropCheck
     #
     # Shrinks element generators.
     #
-    #    >> Generators.fixed_hash(a: Generators.integer(), b: Generators.float(), c: Generators.integer()).call(10, Random.new(42))
+    #    >> Generators.fixed_hash(a: Generators.integer(), b: Generators.real_float(), c: Generators.integer()).call(10, Random.new(42))
     #    => {:a=>-4, :b=>13.0, :c=>-3}
     def fixed_hash(hash)
       keypair_generators =
