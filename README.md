@@ -2,6 +2,8 @@
 
 PropCheck allows you to do Property Testing in Ruby.
 
+![Gem](https://img.shields.io/gem/v/prop_check.svg)
+
 It features:
 
 - Generators for common datatypes.
