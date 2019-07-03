@@ -4,6 +4,7 @@ PropCheck allows you to do Property Testing in Ruby.
 
 [![Gem](https://img.shields.io/gem/v/prop_check.svg)](https://rubygems.org/gems/prop_check)
 [![Build Status](https://travis-ci.org/Qqwy/ruby-prop_check.svg?branch=master)](https://travis-ci.org/Qqwy/ruby-prop_check)
+[![RubyDoc](https://img.shields.io/badge/RubyDoc-documentation-success.svg)](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck)
 
 It features:
 
@@ -159,6 +160,9 @@ you can use `Generators.frequency` which takes a hash of (integer_frequency => g
 
 There are even more functions in the `Generator` class and the `Generators` module that you might want to use,
 although above are the most generally useful ones.
+
+[PropCheck::Generator documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generator)
+[PropCheck::Generators documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generators)
 
 ## Development
 
