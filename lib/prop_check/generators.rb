@@ -10,6 +10,8 @@ module PropCheck
     ##
     # Always returns the same value, regardless of `size` or `rng` (random number generator state)
     #
+    # No shrinking (only considers the current single value `val`).
+    #
     #   >> Generators.constant("pie").sample(5, size: 10, rng: Random.new(42))
     #   => ["pie", "pie", "pie", "pie", "pie"]
     def constant(val)
@@ -47,6 +49,8 @@ module PropCheck
     # This means `choose` is useful for e.g. picking an element out of multiple possibilities,
     # but for other purposes you probably want to use `integer` et co.
     #
+    # Shrinks to integers closer to zero.
+    #
     #   >> r = Random.new(42); Generators.choose(0..5).sample(size: 10, rng: r)
     #   => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
     #   >> r = Random.new(42); Generators.choose(0..5).sample(size: 20000, rng: r)
@@ -62,6 +66,9 @@ module PropCheck
     # A random integer which scales with `size`.
     # Integers start small (around 0)
     # and become more extreme (both higher and lower, negative) when `size` increases.
+    #
+    #
+    # Shrinks to integers closer to zero.
     #
     #   >> Generators.integer.call(2, Random.new(42))
     #   => 1
@@ -112,6 +119,10 @@ module PropCheck
     # Generates floating point numbers
     # These start small (around 0)
     # and become more extreme (large positive and large negative numbers)
+    #
+    #
+    # Shrinks to numbers closer to zero.
+    #
     # TODO testing for NaN, Infinity?
     def float
       # integer.bind do |a|
@@ -129,6 +140,8 @@ module PropCheck
     ##
     # Picks one of the given generators in `choices` at random uniformly every time.
     #
+    # Shrinks to values earlier in the list of `choices`.
+    #
     #    >> Generators.one_of(Generators.constant(true), Generators.constant(false)).sample(5, size: 10, rng: Random.new(42))
     #    => [true, false, true, true, true]
     def one_of(*choices)
@@ -142,6 +155,8 @@ module PropCheck
     # `frequencies` expects keys to be numbers
     # (representing the relative frequency of this generator)
     # and values to be generators.
+    #
+    # Shrinks to arbitrary elements (since hashes are not ordered).
     #
     #   >> Generators.frequency(5 => Generators.integer, 1 => Generators.printable_ascii_char).sample(size: 10, rng: Random.new(42))
     #   => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
@@ -157,6 +172,8 @@ module PropCheck
     # Generates an array containing always exactly one value from each of the passed generators,
     # in the same order as specified:
     #
+    # Shrinks element generators, one at a time (trying last one first).
+    #
     #   >> Generators.tuple(Generators.integer, Generators.float).call(10, Random.new(42))
     #   => [-4, 13.0]
     def tuple(*generators)
@@ -171,6 +188,8 @@ module PropCheck
     # Given a `hash` where the values are generators,
     # creates a generator that returns hashes
     # with the same keys, and their corresponding values from their corresponding generators.
+    #
+    # Shrinks element generators.
     #
     #    >> Generators.fixed_hash(a: Generators.integer(), b: Generators.float(), c: Generators.integer()).call(10, Random.new(42))
     #    => {:a=>-4, :b=>13.0, :c=>-3}
@@ -221,6 +240,9 @@ module PropCheck
     ##
     # Generates a single-character string
     # containing one of a..z, A..Z, 0..9
+    #
+    # Shrinks towards lowercase 'a'.
+    # 
     def alphanumeric_char
       one_of(*@alphanumeric_chars.map(&method(:constant)))
     end
@@ -228,22 +250,29 @@ module PropCheck
     ##
     # Generates a string
     # containing only the characters a..z, A..Z, 0..9
+    # Shrinks towards fewer characters, and towards lowercase 'a'.
     def alphanumeric_string
       array(alphanumeric_char).map(&:join)
     end
 
+    @printable_ascii_chars = (' '..'~').to_a.freeze
 
     ##
     # Generates a single-character string
     # from the printable ASCII character set.
     #
+    # Shrinks towards ' '.
+    #
     #   >> Generators.printable_ascii_char.sample(size: 10, rng: Random.new(42))
     #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
-    @printable_ascii_chars = (' '..'~').to_a.freeze
     def printable_ascii_char
       one_of(*@printable_ascii_chars.map(&method(:constant)))
     end
 
+    ##
+    # Generates strings
+    # from the printable ASCII character set.
+    # Shrinks towards fewer characters, and towards ' '.
     def printable_ascii_string
       array(printable_ascii_char).map(&:join)
     end
@@ -262,10 +291,19 @@ module PropCheck
         "\a"
       ]
     ].flat_map(&:to_a).freeze
+
+    ##
+    # Generates a single-character string
+    # from the printable ASCII character set.
+    # Shrinks towards '\n'.
     def ascii_char
       one_of(*@ascii_chars.map(&method(:constant)))
     end
 
+    ##
+    # Generates strings
+    # from the printable ASCII character set.
+    # Shrinks towards fewer characters, and towards '\n'.
     def ascii_string
       array(ascii_char).map(&:join)
     end
@@ -280,6 +318,9 @@ module PropCheck
     ##
     # Generates a single-character printable string
     # both ASCII characters and Unicode.
+    #
+    # Shrinks towards characters with lower codepoints, e.g. ASCII
+    #
     def printable_char
       one_of(*@printable_chars.map(&method(:constant)))
     end
@@ -287,6 +328,9 @@ module PropCheck
     ##
     # Generates a printable string
     # both ASCII characters and Unicode.
+    #
+    # Shrinks towards shorter strings, and towards characters with lower codepoints, e.g. ASCII
+    #
     def printable_string
       array(printable_char).map(&:join)
     end
@@ -294,6 +338,9 @@ module PropCheck
     ##
     # Generates a single unicode character
     # (both printable and non-printable).
+    #
+    # Shrinks towards characters with lower codepoints, e.g. ASCII
+    #
     def char
       choose(0..0x10FFFF).map do |num|
         [num].pack('U')
@@ -303,30 +350,44 @@ module PropCheck
     ##
     # Generates a string of unicode characters
     # (which might contain both printable and non-printable characters).
+    #
+    # Shrinks towards characters with lower codepoints, e.g. ASCII
+    #
     def string
       array(char).map(&:join)
     end
 
     ##
     # Generates either `true` or `false`
+    #
+    # Shrinks towards `false`
+    # 
     def boolean
       one_of(constant(false), constant(true))
     end
 
     ##
     # Generates always `nil`.
+    #
+    # Does not shrink.
     def nil
       constant(nil)
     end
 
     ##
     # Generates `nil` or `false`.
+    #
+    # Shrinks towards `nil`.
+    #
     def falsey
       one_of(constant(nil), constant(false))
     end
 
     ##
     # Generates common terms that are not `nil` or `false`.
+    #
+    # Shrinks towards simpler terms, like `true`, an empty array, a single character or an integer.
+    #
     def truthy
       one_of(constant(true),
              constant([]),

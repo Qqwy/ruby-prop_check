@@ -138,8 +138,24 @@ Allows you to create one or another generator conditionally on the output of ano
 
 Useful if you want to be able to generate a value to be one of multiple possibilities:
 
-    >> one_of()
+    
+    >> Generators.one_of(Generators.constant(true), Generators.constant(false)).sample(5, size: 10, rng: Random.new(42))
+    => [true, false, true, true, true]
 
+(note that for this example, you can also use `Generators.boolean`. The example happens to show how it is implemented under the hood.)
+
+#### Generators.frequency
+
+If `one_of` does not give you enough flexibility because you want some results to be more common than others,
+you can use `Generators.frequency` which takes a hash of (integer_frequency => generator) keypairs.
+
+    >> Generators.frequency(5 => Generators.integer, 1 => Generators.printable_ascii_char).sample(size: 10, rng: Random.new(42))
+    => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
+
+#### Others
+
+There are even more functions in the `Generator` class and the `Generators` module that you might want to use,
+although above are the most generally useful ones.
 
 ## Development
 
