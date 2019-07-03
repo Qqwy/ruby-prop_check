@@ -135,11 +135,12 @@ module PropCheck
     end
 
 
-    @special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, 0.0.next_float, 0.0.prev_float]
+    @special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, Float::MIN, 0.0.next_float, 0.0.prev_float]
     ##
     # Generates floating-point numbers
     # Will generate NaN, Infinity, -Infinity,
-    # as well as Float::EPSILON, 0.0.next_float, 0.0.prev_float,
+    # as well as Float::EPSILON, Float::MAX, Float::MIN,
+    # 0.0.next_float, 0.0.prev_float,
     # to test the handling of floating-point edge cases.
     # Approx. 1/100 generated numbers is a special one.
     #
