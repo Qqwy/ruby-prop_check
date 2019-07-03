@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    prop_check (0.6.0)
+    prop_check (0.6.1)
 
 GEM
   remote: https://rubygems.org/
