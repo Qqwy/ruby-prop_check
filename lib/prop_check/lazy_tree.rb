@@ -7,7 +7,7 @@ module PropCheck
   # A Rose tree with the root being eager,
   # and the children computed lazily, on demand.
   class LazyTree
-    using Helper::LazyAppend
+    using PropCheck::Helper::LazyAppend
 
     attr_accessor :root, :children
     def initialize(root, children = [].lazy)

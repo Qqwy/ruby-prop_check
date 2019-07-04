@@ -4,6 +4,6 @@ LazyTree = PropCheck::LazyTree
 
 RSpec.describe PropCheck::LazyTree do
 
-  using Helper::LazyAppend
+  using PropCheck::Helper::LazyAppend
     doctest PropCheck::LazyTree
 end
