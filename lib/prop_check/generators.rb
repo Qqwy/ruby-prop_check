@@ -1,4 +1,6 @@
 # coding: utf-8
+# frozen_string_literal: true
+
 require 'prop_check/generator'
 require 'prop_check/lazy_tree'
 module PropCheck

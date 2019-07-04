@@ -1,22 +1,13 @@
-##
-# A refinement for enumerators
-# to allow lazy appending of two (potentially lazy) enumerators:
-module LazyAppend
-  refine Enumerable do
-    ##   >> [1,2,3].lazy_append([4,5.6]).to_a
-    ##   => [1,2,3,4,5,6]
-    def lazy_append(other_enumerator)
-      [self, other_enumerator].lazy.flat_map(&:lazy)
-    end
-  end
-end
+# frozen_string_literal: true
+
+require 'prop_check/helper/lazy_append'
 
 module PropCheck
   ##
   # A Rose tree with the root being eager,
   # and the children computed lazily, on demand.
   class LazyTree
-    using LazyAppend
+    using Helper::LazyAppend
 
     attr_accessor :root, :children
     def initialize(root, children = [].lazy)
