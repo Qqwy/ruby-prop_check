@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'prop_check/generator'
 require 'prop_check/lazy_tree'
 module PropCheck
@@ -134,7 +135,6 @@ module PropCheck
       end
     end
 
-
     @special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, Float::MIN, 0.0.next_float, 0.0.prev_float]
     ##
     # Generates floating-point numbers
@@ -148,7 +148,6 @@ module PropCheck
     #    >> Generators.float().sample(10, size: 10, rng: Random.new(42))
     #    => [4.0, 9.555555555555555, 0.0, -Float::INFINITY, 5.5, -5.818181818181818, 1.1428571428571428, 0.0, 8.0, 7.857142857142858]
     def float
-
       frequency(99 => real_float, 1 => one_of(*@special_floats.map(&method(:constant))))
     end
 
@@ -260,7 +259,9 @@ module PropCheck
     # containing one of a..z, A..Z, 0..9
     #
     # Shrinks towards lowercase 'a'.
-    # 
+    #
+    #    >> Generators.alphanumeric_char.sample(5, size: 10, rng: Random.new(42))
+    #    => ["M", "Z", "C", "o", "Q"]
     def alphanumeric_char
       one_of(*@alphanumeric_chars.map(&method(:constant)))
     end
@@ -268,7 +269,11 @@ module PropCheck
     ##
     # Generates a string
     # containing only the characters a..z, A..Z, 0..9
+    #
     # Shrinks towards fewer characters, and towards lowercase 'a'.
+    #
+    #    >> Generators.alphanumeric_string.sample(5, size: 10, rng: Random.new(42))
+    #    => ["ZCoQ", "8uM", "wkkx0JNx", "v0bxRDLb", "Gl5v8RyWA6"]
     def alphanumeric_string
       array(alphanumeric_char).map(&:join)
     end
@@ -290,7 +295,11 @@ module PropCheck
     ##
     # Generates strings
     # from the printable ASCII character set.
+    #
     # Shrinks towards fewer characters, and towards ' '.
+    #
+    #    >> Generators.printable_ascii_string.sample(5, size: 10, rng: Random.new(42))
+    #    => ["S|.g", "rvjjw7\"5T!", "=", "!_[4@", "Y"]
     def printable_ascii_string
       array(printable_ascii_char).map(&:join)
     end
@@ -313,7 +322,11 @@ module PropCheck
     ##
     # Generates a single-character string
     # from the printable ASCII character set.
+    #
     # Shrinks towards '\n'.
+    #
+    #    >> Generators.ascii_char.sample(size: 10, rng: Random.new(42))
+    #    => ["d", "S", "|", ".", "g", "\\", "4", "d", "r", "v"]
     def ascii_char
       one_of(*@ascii_chars.map(&method(:constant)))
     end
@@ -321,7 +334,11 @@ module PropCheck
     ##
     # Generates strings
     # from the printable ASCII character set.
+    #
     # Shrinks towards fewer characters, and towards '\n'.
+    #
+    #    >> Generators.ascii_string.sample(5, size: 10, rng: Random.new(42))
+    #    => ["S|.g", "drvjjw\b\a7\"", "!w=E!_[4@k", "x", "zZI{[o"]
     def ascii_string
       array(ascii_char).map(&:join)
     end
@@ -339,6 +356,8 @@ module PropCheck
     #
     # Shrinks towards characters with lower codepoints, e.g. ASCII
     #
+    #    >> Generators.printable_char.sample(size: 10, rng: Random.new(42))
+    #    => ["吏", "", "", "", "", "", "", "", "", "Ȍ"]
     def printable_char
       one_of(*@printable_chars.map(&method(:constant)))
     end
@@ -349,6 +368,8 @@ module PropCheck
     #
     # Shrinks towards shorter strings, and towards characters with lower codepoints, e.g. ASCII
     #
+    #    >> Generators.printable_string.sample(5, size: 10, rng: Random.new(42))
+    #    => ["", "Ȍ", "𐁂", "Ȕ", ""]
     def printable_string
       array(printable_char).map(&:join)
     end
@@ -359,6 +380,8 @@ module PropCheck
     #
     # Shrinks towards characters with lower codepoints, e.g. ASCII
     #
+    #    >> Generators.printable_char.sample(size: 10, rng: Random.new(42))
+    #    => ["吏", "", "", "", "", "", "", "", "", "Ȍ"]
     def char
       choose(0..0x10FFFF).map do |num|
         [num].pack('U')
@@ -371,6 +394,8 @@ module PropCheck
     #
     # Shrinks towards characters with lower codepoints, e.g. ASCII
     #
+    #    >> Generators.string.sample(5, size: 10, rng: Random.new(42))
+    #    => ["\u{A3DB3}𠍜\u{3F46A}\u{1AEBC}", "􍙦𡡹󴇒\u{DED74}𪱣\u{43E97}ꂂ\u{50695}􏴴\u{C0301}", "\u{4FD9D}", "\u{C14BF}\u{193BB}𭇋󱣼\u{76B58}", "𦐺\u{9FDDB}\u{80ABB}\u{9E3CF}𐂽\u{14AAE}"]
     def string
       array(char).map(&:join)
     end
@@ -379,7 +404,9 @@ module PropCheck
     # Generates either `true` or `false`
     #
     # Shrinks towards `false`
-    # 
+    #
+    #    >> Generators.boolean.sample(5, size: 10, rng: Random.new(42))
+    #    => [false, true, false, false, false]
     def boolean
       one_of(constant(false), constant(true))
     end
@@ -388,6 +415,9 @@ module PropCheck
     # Generates always `nil`.
     #
     # Does not shrink.
+    #
+    #    >> Generators.nil.sample(5, size: 10, rng: Random.new(42))
+    #    => [nil, nil, nil, nil, nil]
     def nil
       constant(nil)
     end
@@ -397,8 +427,25 @@ module PropCheck
     #
     # Shrinks towards `nil`.
     #
+    #    >> Generators.falsey.sample(5, size: 10, rng: Random.new(42))
+    #    => [nil, false, nil, nil, nil]
     def falsey
       one_of(constant(nil), constant(false))
+    end
+
+    ##
+    # Generates symbols consisting of lowercase letters and potentially underscores.
+    #
+    # Shrinks towards shorter symbols and the letter 'a'.
+    #
+    #    >> Generators.simple_symbol.sample(5, size: 10, rng: Random.new(42))
+    #    => [:tokh, :gzswkkxudh, :vubxlfbu, :lzvlyq__jp, :oslw]
+    def simple_symbol
+      alphabet = ('a'..'z').to_a
+      alphabet << '_'
+      array(one_of(*alphabet.map(&method(:constant))))
+        .map(&:join)
+        .map(&:to_sym)
     end
 
     ##
@@ -406,6 +453,8 @@ module PropCheck
     #
     # Shrinks towards simpler terms, like `true`, an empty array, a single character or an integer.
     #
+    #    >> Generators.truthy.sample(5, size: 10, rng: Random.new(42))
+    #    => [[4, 0, -3, 10, -4, 8, 0, 0, 10], -3, [5.5, -5.818181818181818, 1.1428571428571428, 0.0, 8.0, 7.857142857142858, -0.6666666666666665, 5.25], [], ["\u{9E553}\u{DD56E}\u{A5BBB}\u{8BDAB}\u{3E9FC}\u{C4307}\u{DAFAE}\u{1A022}\u{938CD}\u{70631}", "\u{C4C01}\u{32D85}\u{425DC}"]]
     def truthy
       one_of(constant(true),
              constant([]),
@@ -417,7 +466,7 @@ module PropCheck
              array(float),
              array(char),
              array(string),
-             hash(symbol, integer),
+             hash(simple_symbol, integer),
              hash(string, integer),
              hash(string, string)
             )
@@ -426,6 +475,9 @@ module PropCheck
     ##
     # Generates whatever `other_generator` generates
     # but sometimes instead `nil`.`
+    #
+    #    >> Generators.nillable(Generators.integer).sample(20, size: 10, rng: Random.new(42))
+    #    => [9, 10, 8, 0, 10, -3, -8, 10, 1, -9, -10, nil, 1, 6, nil, 1, 9, -8, 8, 10]
     def nillable(other_generator)
       frequency(9 => other_generator, 1 => constant(nil))
     end
