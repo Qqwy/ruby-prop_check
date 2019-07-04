@@ -3,8 +3,19 @@ require 'stringio'
 require 'prop_check/property/configuration'
 require 'prop_check/property/check_evaluator'
 module PropCheck
+  ##
+  # Run properties
   class Property
 
+    ##
+    # Call this with a keyword argument list of (symbol => generators) and a block.
+    # The block will then be executed many times, with the respective symbol names
+    # being defined as having a single generated value.
+    #
+    # If you do not pass a block right away,
+    # a Property object is returned, which you can call the other instance methods
+    # of this class on before finally passing a block to it using `#check`.
+    # (so `forall(a: Generators.integer) do ... end` and forall(a: Generators.integer).check do ... end` are the same)
     def self.forall(**bindings, &block)
 
       property = new(bindings)
@@ -14,10 +25,19 @@ module PropCheck
       property
     end
 
+    ##
+    # Returns the default configuration of the library as it is configured right now
+    # for introspection.
+    #
+    # For the configuration of a single property, check its `configuration` instance method.
+    # See PropCheck::Property::Configuration for more info on available settings.
     def self.configuration
       @configuration ||= Configuration.new
     end
 
+    ##
+    # Yields the library's configuration object for you to alter.
+    # See PropCheck::Property::Configuration for more info on available settings.
     def self.configure
       yield(configuration)
     end
@@ -32,10 +52,22 @@ module PropCheck
       @config = self.class.configuration
     end
 
+    ##
+    # Returns the configuration of this property
+    # for introspection.
+    #
+    # See PropCheck::Property::Configuration for more info on available settings.
     def configuration
       @config
     end
 
+    ##
+    # Allows you to override the configuration of this property
+    # by giving a hash with new settings.
+    #
+    # If no other changes need to occur before you want to check the property,
+    # you can immediately pass a block to this method.
+    # (so `forall(a: Generators.integer).with_config(verbose: true) do ... end` is the same as `forall(a: Generators.integer).with_config(verbose: true).check do ... end`)
     def with_config(**config, &block)
       @config = @config.merge(config)
 
@@ -44,13 +76,23 @@ module PropCheck
       self
     end
 
-    def where(&new_condition)
+    ##
+    # filters the generator using the  given `condition`.
+    # The final property checking block will only be run if the condition is truthy.
+    #
+    # If wanted, multiple `where`-conditions can be specified on a property.
+    # Be aware that if you filter away too much generated inputs,
+    # you might encounter a GeneratorExhaustedError.
+    # Only filter if you have few inputs to reject. Otherwise, improve your generators.
+    def where(&condition)
       original_condition = @condition.dup
-      @condition = -> { instance_exec(&original_condition) && instance_exec(&new_condition) }
+      @condition = -> { instance_exec(&original_condition) && instance_exec(&condition) }
 
       self
     end
 
+    ##
+    # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
       binding_generator = PropCheck::Generators.fixed_hash(bindings)
 
@@ -70,7 +112,7 @@ module PropCheck
     private def ensure_not_exhausted!(n_runs)
       return if n_runs >= @config.n_runs
 
-      raise GeneratorExhaustedError, """
+      raise Errors::GeneratorExhaustedError, """
         Could not perform `n_runs = #{@config.n_runs}` runs,
         (exhausted #{@config.max_generate_attempts} tries)
         because too few generator results were adhering to
@@ -131,7 +173,7 @@ module PropCheck
     private def show_problem_output(problem, generator_results, n_successful, &block)
       output = @config.verbose ? STDOUT : StringIO.new
       output = pre_output(output, n_successful, generator_results.root, problem)
-      shrunken_result, shrunken_exception, n_shrink_steps = shrink2(generator_results, output, &block)
+      shrunken_result, shrunken_exception, n_shrink_steps = shrink(generator_results, output, &block)
       output = post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
 
       [output, shrunken_result, shrunken_exception, n_shrink_steps]
@@ -168,7 +210,7 @@ module PropCheck
       end.join(", ")
     end
 
-    private def shrink2(bindings_tree, io, &fun)
+    private def shrink(bindings_tree, io, &fun)
       io.puts 'Shrinking...' if @config.verbose
       problem_child = bindings_tree
       siblings = problem_child.children.lazy
@@ -191,11 +233,11 @@ module PropCheck
 
         begin
           CheckEvaluator.new(sibling.root, &fun).call
-        rescue Exception => problem
+        rescue Exception => e
           problem_child = sibling
           parent_siblings = siblings
           siblings = problem_child.children.lazy
-          problem_exception = problem
+          problem_exception = e
         end
       end
 

@@ -114,7 +114,7 @@ RSpec.describe PropCheck do
             PropCheck.forall(x: PropCheck::Generators.nonpositive_integer).where {x == 0}.check do
             end
           end.to raise_error do |error|
-            expect(error).to be_a(PropCheck::GeneratorExhaustedError)
+            expect(error).to be_a(PropCheck::Errors::GeneratorExhaustedError)
             # Check for no shrinking:
             expect(defined?(error.prop_check_info)).to be_nil
           end

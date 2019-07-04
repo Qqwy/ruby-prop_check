@@ -3,14 +3,26 @@ require 'prop_check/property'
 require 'prop_check/generator'
 require 'prop_check/generators'
 require 'prop_check/helper'
+##
+# Main module of the PropCheck library.
+#
+# You probably want to look at the documentation of
+# PropCheck::Generator and PropCheck::Generators
+# to find out more about how to use generators.
 module PropCheck
-  class Error < StandardError; end
-  class UserError < Error; end
-  class GeneratorExhaustedError < UserError; end
-  class MaxShrinkStepsExceededError < UserError; end
+  module Errors
+    class Error < StandardError; end
+    class UserError < Error; end
+    class GeneratorExhaustedError < UserError; end
+    class MaxShrinkStepsExceededError < UserError; end
+  end
 
   extend self
 
+  ##
+  # Runs a property.
+  #
+  # See the README for more details.
   def forall(*args, **kwargs, &block)
     PropCheck::Property.forall(*args, **kwargs, &block)
   end
