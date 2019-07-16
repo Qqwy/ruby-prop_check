@@ -26,7 +26,7 @@ Before releasing this gem on Rubygems, the following things need to be finished:
   - [x] Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
  - [x] Look into customization of settings from e.g. command line arguments.
 - [x] Good, unicode-compliant, string generators.
-- [ ] Filtering generator outputs.
+- [x] Filtering generator outputs.
 
 # Nice-to-haves
  
