@@ -1,4 +1,5 @@
 require 'stringio'
+require "awesome_print"
 
 require 'prop_check/property/configuration'
 require 'prop_check/property/check_evaluator'
@@ -205,9 +206,10 @@ module PropCheck
     end
 
     private def print_roots(lazy_tree_hash)
-      lazy_tree_hash.map do |name, val|
-        "#{name} = #{val.inspect}"
-      end.join(", ")
+      # lazy_tree_hash.map do |name, val|
+      #   "#{name} = #{val.inspect}"
+      # end.join(", ")
+      lazy_tree_hash.ai
     end
 
     private def shrink(bindings_tree, io, &fun)
