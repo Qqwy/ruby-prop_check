@@ -152,7 +152,7 @@ module PropCheck
       output_string = output.is_a?(StringIO) ? output.string : e.message
 
       e.define_singleton_method :prop_check_info do
-        {
+        res = {
           original_input: generator_result.root,
           original_exception_message: e.message,
           shrunken_input: shrunken_result,
@@ -160,6 +160,8 @@ module PropCheck
           n_successful: n_successful,
           n_shrink_steps: n_shrink_steps
         }
+
+        puts res.inspect
       end
 
       raise e, output_string, e.backtrace
@@ -246,13 +248,16 @@ module PropCheck
         shrink_steps += 1
         io.print '.' if @config.verbose
 
+        ap ["shrinking", sibling.root, problem_exception, shrink_steps]
+
         begin
-          self.class.check_evaluator_class.new(sibling, proc { |e| raise e }, &fun).call
+          self.class.check_evaluator_class.new(sibling, proc { |e| raise e }, shrinking: true, &fun).call
         rescue Exception => e
           problem_child = sibling
           parent_siblings = siblings
           siblings = problem_child.children.lazy
           problem_exception = e
+
         end
       end
 

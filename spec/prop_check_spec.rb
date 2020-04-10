@@ -88,6 +88,7 @@ RSpec.describe PropCheck do
               expect(x).to be < 100
             end
           end.to raise_error do |error|
+            ap error
             expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
             expect(error.message).to match(/\(after \d+ successful property test runs\)/m)
             expect(error.message).to match(/Exception message:/m)
@@ -161,16 +162,22 @@ RSpec.describe PropCheck do
         end
       end
     end
-    describe RSpec do
+    fdescribe RSpec do
       require 'prop_check/rspec'
-      extend PropCheck::RSpec
-      xit "adds forall to the example scope" do
-        thing = nil
-        forall(x: PropCheck::Generators.integer) do
-          expect(x).to be_a(Integer)
-          thing = true
+      describe "some examples" do
+        PropCheck::RSpec.forall(x: PropCheck::Generators.integer, y: PropCheck::Generators.boolean).with_config(n_runs: 20, verbose: false).check do
+          property "x should be an integer" do
+            expect(false).to eq(true)
+            # expect(x).to be_a(Integer)
+            # if x > 1
+            #   1 / 0
+            # end
+          end
+
+          property "y should not be an integer" do
+            expect(y).to_not be_a(Integer)
+          end
         end
-        expect(thing).to be true
       end
     end
   end

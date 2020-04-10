@@ -11,12 +11,13 @@ module PropCheck
     class CheckEvaluator
       include RSpec::Matchers if Object.const_defined?('RSpec')
 
-      def initialize(generator_result, exception_handler = proc { |e| raise e }, &block)
+      def initialize(generator_result, exception_handler = proc { |e| raise e }, shrinking: false, &block)
         @generator_result = generator_result
         @bindings = generator_result.root
         @caller = block.binding.receiver
         @block = block
         @exception_handler = exception_handler
+        @shrinking = shrinking
         define_named_instance_methods(@bindings)
       end
 
@@ -34,6 +35,7 @@ module PropCheck
       # Dispatches to caller whenever something is not part of `bindings`.
       # (No need to invoke this method manually)
       def method_missing(method, *args, &block)
+        puts "Method: #{method}, args: #{args.inspect}"
         @caller.__send__(method, *args, &block) || super
       end
 
