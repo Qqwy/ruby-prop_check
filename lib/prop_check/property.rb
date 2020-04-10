@@ -93,6 +93,12 @@ module PropCheck
     end
 
     ##
+    # Can be overridden by child-classes
+    def self.check_evaluator_class
+      CheckEvaluator
+    end
+
+    ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
       binding_generator = PropCheck::Generators.fixed_hash(bindings)
@@ -124,17 +130,24 @@ module PropCheck
     end
 
     private def check_attempt(generator_result, n_successful, &block)
-      CheckEvaluator.new(generator_result.root, &block).call
+      exception_handler = proc { |e| self.handle_exception(e, generator_result, n_successful, &block) }
+      begin
+        self.class.check_evaluator_class.new(generator_result, exception_handler, &block).call
 
-    # immediately stop (without shrinnking) for when the app is asked
-    # to close by outside intervention
-    rescue SignalException, SystemExit
-      raise
+      # immediately stop (without shrinnking) for when the app is asked
+      # to close by outside intervention
+      rescue SignalException, SystemExit
+        raise
 
-    # We want to capture _all_ exceptions (even low-level ones) here,
-    # so we can shrink to find their cause.
-    # don't worry: they all get reraised
-    rescue Exception => e
+      # We want to capture _all_ exceptions (even low-level ones) here,
+      # so we can shrink to find their cause.
+      # don't worry: they all get reraised
+      rescue Exception => e
+        exception_handler.call(e)
+      end
+    end
+
+    def handle_exception(e, generator_result, n_successful, &block)
       output, shrunken_result, shrunken_exception, n_shrink_steps = show_problem_output(e, generator_result, n_successful, &block)
       output_string = output.is_a?(StringIO) ? output.string : e.message
 
@@ -161,7 +174,7 @@ module PropCheck
         .lazy
         .map { binding_generator.generate(size, rng) }
         .reject { |val| val.root == :"_PropCheck.filter_me" }
-        .select { |val| CheckEvaluator.new(val.root, &@condition).call }
+        .select { |val| self.class.check_evaluator_class.new(val, proc { |e| raise e }, &@condition).call }
         .map do |result|
           n_runs += 1
           size += 1
@@ -234,7 +247,7 @@ module PropCheck
         io.print '.' if @config.verbose
 
         begin
-          CheckEvaluator.new(sibling.root, &fun).call
+          self.class.check_evaluator_class.new(sibling, proc { |e| raise e }, &fun).call
         rescue Exception => e
           problem_child = sibling
           parent_siblings = siblings

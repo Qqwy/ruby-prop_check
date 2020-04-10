@@ -11,10 +11,13 @@ module PropCheck
     class CheckEvaluator
       include RSpec::Matchers if Object.const_defined?('RSpec')
 
-      def initialize(bindings, &block)
+      def initialize(generator_result, exception_handler = proc { |e| raise e }, &block)
+        @generator_result = generator_result
+        @bindings = generator_result.root
         @caller = block.binding.receiver
         @block = block
-        define_named_instance_methods(bindings)
+        @exception_handler = exception_handler
+        define_named_instance_methods(@bindings)
       end
 
       def call

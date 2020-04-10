@@ -140,7 +140,7 @@ RSpec.describe PropCheck do
             def call_me(input)
               input + 1234
             end
-            c = PropCheck::Property::CheckEvaluator.new({y: 2}) do
+            c = PropCheck::Property::CheckEvaluator.new(PropCheck::Generators.constant({y: 2}).generate(1)) do
               x = call_me(y)
             end
             expect(c.respond_to?(:call_me)).to be true
