@@ -17,7 +17,7 @@ module PropCheck
     # a Property object is returned, which you can call the other instance methods
     # of this class on before finally passing a block to it using `#check`.
     # (so `forall(a: Generators.integer) do ... end` and forall(a: Generators.integer).check do ... end` are the same)
-    def self.forall(**bindings, &block)
+    def self.forall(*bindings, &block)
 
       property = new(bindings)
 
@@ -45,7 +45,7 @@ module PropCheck
 
     attr_reader :bindings, :condition
 
-    def initialize(**bindings)
+    def initialize(*bindings)
       raise ArgumentError, 'No bindings specified!' if bindings.empty?
 
       @bindings = bindings
@@ -95,7 +95,7 @@ module PropCheck
     ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
-      binding_generator = PropCheck::Generators.fixed_hash(bindings)
+      binding_generator = PropCheck::Generators.tuple(bindings)
 
       n_runs = 0
       n_successful = 0
