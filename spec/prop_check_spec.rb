@@ -6,16 +6,16 @@ RSpec.describe PropCheck do
   describe PropCheck do
     describe ".forall" do
       it "returns a Property when called without a block" do
-        expect(PropCheck.forall(PropCheck::Generators.integer)).to be_a(PropCheck::Property)
+        expect(PropCheck.forall(x: PropCheck::Generators.integer)).to be_a(PropCheck::Property)
       end
 
       it "runs the property test when called with a block" do
-        expect { |block| PropCheck.forall(PropCheck::Generators.integer, &block) }.to yield_control
+        expect { |block| PropCheck.forall(x: PropCheck::Generators.integer, &block) }.to yield_control
       end
 
       it "will not shrink upon encountering a SystemExit" do
         expect do
-          PropCheck.forall(PropCheck::Generators.integer) do |x|
+          PropCheck.forall(x: PropCheck::Generators.integer) do |x:|
             raise SystemExit if x > 3
           end
         end.to raise_error do |error|
@@ -28,7 +28,7 @@ RSpec.describe PropCheck do
 
       it "will not shrink upon encountering a SignalException" do
         expect do
-          PropCheck.forall(PropCheck::Generators.integer) do |x|
+          PropCheck.forall(x: PropCheck::Generators.integer) do |x:|
             Process.kill('HUP',Process.pid) if x > 3
           end
         end.to raise_error do |error|
@@ -47,7 +47,7 @@ RSpec.describe PropCheck do
         shrunken_val = nil
 
         expect do
-          PropCheck.forall(PropCheck::Generators.float) do |x|
+          PropCheck.forall(x: PropCheck::Generators.float) do |x:|
             if x > 3.1415
               exploding_val ||= x
               shrunken_val = x
@@ -61,8 +61,8 @@ RSpec.describe PropCheck do
           expect(info.keys).to contain_exactly(*expected_keys)
 
           expect(info[:original_exception_message]).to eq("I do not like this number")
-          expect(info[:original_input]).to eq([exploding_val])
-          expect(info[:shrunken_input]).to eq([shrunken_val])
+          expect(info[:original_input]).to eq({x: exploding_val})
+          expect(info[:shrunken_input]).to eq({x: shrunken_val})
           expect(info[:n_successful]).to be_a(Integer)
           expect(info[:n_shrink_steps]).to be_a(Integer)
         end
@@ -72,19 +72,19 @@ RSpec.describe PropCheck do
     describe "Property" do
       describe "#with_config" do
         it "updates the configuration" do
-          p = PropCheck.forall(PropCheck::Generators.integer)
+          p = PropCheck.forall(x: PropCheck::Generators.integer)
           expect(p.configuration[:verbose]).to be false
           expect(p.with_config(verbose: true).configuration[:verbose]).to be true
         end
         it "Runs the property test when called with a block" do
-          expect { |block| PropCheck.forall(PropCheck::Generators.integer).with_config({}, &block) }.to yield_control
+          expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_config({}, &block) }.to yield_control
         end
       end
 
       describe "#check" do
         it "generates an error that Rspec can pick up" do
           expect do
-            PropCheck.forall(PropCheck::Generators.nonnegative_integer) do |x|
+            PropCheck.forall(x: PropCheck::Generators.nonnegative_integer) do |x:|
               expect(x).to be < 100
             end
           end.to raise_error do |error|
@@ -104,14 +104,14 @@ RSpec.describe PropCheck do
 
       describe "#where" do
         it "filters results" do
-          PropCheck.forall(PropCheck::Generators.integer, PropCheck::Generators.positive_integer).where { |x, y|  x != y}.check do |x, y|
+          PropCheck.forall(x: PropCheck::Generators.integer, y: PropCheck::Generators.positive_integer).where { |x:, y:|  x != y}.check do |x:, y:|
             expect(x).to_not eq y
           end
         end
 
         it "raises an error if too much was filtered" do
           expect do
-            PropCheck.forall(PropCheck::Generators.nonpositive_integer).where { |x|  x == 0}.check do |_x|
+            PropCheck.forall(x: PropCheck::Generators.nonpositive_integer).where { |x:|  x == 0}.check do
             end
           end.to raise_error do |error|
             expect(error).to be_a(PropCheck::Errors::GeneratorExhaustedError)
@@ -120,9 +120,9 @@ RSpec.describe PropCheck do
           end
         end
 
-        it "crashes when doing bullshit in the where block" do
+        it "crashes when doing nonesense in the where block" do
           expect do
-            PropCheck.forall(PropCheck::Generators.negative_integer).where { |x|  x.unexistentmethod == 3}.check do |x|
+            PropCheck.forall(x: PropCheck::Generators.negative_integer).where { |x:|  x.unexistentmethod == 3}.check do
             end
           end.to raise_error do |error|
             expect(error).to be_a(NoMethodError)
@@ -148,7 +148,7 @@ RSpec.describe PropCheck do
       extend PropCheck::RSpec
       xit "adds forall to the example scope" do
         thing = nil
-        forall(x: PropCheck::Generators.integer) do
+        forall(x: PropCheck::Generators.integer) do |x:|
           expect(x).to be_a(Integer)
           thing = true
         end
