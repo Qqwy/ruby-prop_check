@@ -133,8 +133,8 @@ PropCheck will see if the failure still happens with `x = 50`.
 If it does , it will try `x = 25`. If not, it will try `x = 75`, and so on.
 
 This means if something only goes wrong for `x = 2`, the program will try:
-- `x = 100`(fails),`
-- x = 50`(fails), 
+- `x = 100`(fails),
+- `x = 50`(fails), 
 - `x = 25`(fails), 
 - `x = 12`(fails), 
 - `x = 6`(fails), 
