@@ -23,9 +23,7 @@ RSpec.describe PropCheck::Generator do
     it "might cause a Generator Exhaustion if we filter too much" do
       never = PropCheck::Generators.integer().where { |val| val == nil }
       expect do
-        PropCheck::forall(never) do |never|
-          ap never
-        end
+        PropCheck::forall(never) {}
       end.to raise_error do |error|
         expect(error).to be_a(PropCheck::Errors::GeneratorExhaustedError)
       end

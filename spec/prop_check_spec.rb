@@ -119,6 +119,18 @@ RSpec.describe PropCheck do
             # p error.prop_check_info
           end
         end
+
+
+        it "generates an error with 'shrinking impossible' if the value cannot be shrunk further" do
+          expect do
+            PropCheck.forall(PropCheck::Generators.array(PropCheck::Generators.integer)) do |array|
+              array.sum / array.length
+            end
+          end.to raise_error do |error|
+            expect(error).to be_a(ZeroDivisionError)
+            expect(error.message).to match(/\(shrinking impossible\)/)
+          end
+        end
       end
 
       describe "#where" do
