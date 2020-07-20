@@ -14,7 +14,7 @@ It features:
 - Shrinking to a minimal counter-example on failure.
 
 
-## TODOs before release
+## TODOs before stable release
 
 Before releasing this gem on Rubygems, the following things need to be finished:
 
@@ -30,7 +30,7 @@ Before releasing this gem on Rubygems, the following things need to be finished:
 
 # Nice-to-haves
  
-- [ ] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
+- [x] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
  - [ ] `aggregate` , `resize` and similar generator-modifying calls (c.f. PropEr's variants of these) which will help with introspection/metrics.
  - [ ] Integration with other Ruby test frameworks.
  - Stateful property testing. If implemented at some point, will probably happen in a separate add-on library.

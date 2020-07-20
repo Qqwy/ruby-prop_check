@@ -1,0 +1,1 @@
+- 0.8.0 New syntax that is more explicit, passng generated values to blocks as parameters.
