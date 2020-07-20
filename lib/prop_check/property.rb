@@ -127,7 +127,6 @@ module PropCheck
     end
 
     private def check_attempt(generator_result, n_successful, &block)
-      # CheckEvaluator.new(generator_result.root, &block).call
       block.call(*generator_result.root)
 
     # immediately stop (without shrinnking) for when the app is asked
@@ -210,9 +209,6 @@ module PropCheck
     end
 
     private def print_roots(lazy_tree_hash)
-      # lazy_tree_hash.map do |name, val|
-      #   "#{name} = #{val.inspect}"
-      # end.join(", ")
       lazy_tree_hash.ai
     end
 
@@ -238,7 +234,6 @@ module PropCheck
         io.print '.' if @config.verbose
 
         begin
-          # CheckEvaluator.new(sibling.root, &fun).call
           fun.call(*sibling.root)
         rescue Exception => e
           problem_child = sibling

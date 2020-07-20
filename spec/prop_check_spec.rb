@@ -133,24 +133,6 @@ RSpec.describe PropCheck do
 
       end
 
-      xdescribe "CheckEvaluator" do
-        it "forwards through method_missing when methods on outer scope are being called" do
-          expect do
-            x = 10
-            def call_me(input)
-              input + 1234
-            end
-            c = PropCheck::Property::CheckEvaluator.new({y: 2}) do
-              x = call_me(y)
-            end
-            expect(c.respond_to?(:call_me)).to be true
-            c.call
-
-            expect(x).to be(1234 + 2)
-          end.not_to raise_error
-        end
-      end
-
       describe ".configure" do
         it "configures all checks done from that point onward" do
           PropCheck::Property.configure do |config|
