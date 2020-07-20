@@ -98,7 +98,6 @@ module PropCheck
     ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
-      ap(@bindings)
       binding_generator = PropCheck::Generators.tuple(*@bindings)
 
       n_runs = 0
