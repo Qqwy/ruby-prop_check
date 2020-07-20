@@ -2,7 +2,6 @@ require 'stringio'
 require "awesome_print"
 
 require 'prop_check/property/configuration'
-require 'prop_check/property/check_evaluator'
 module PropCheck
   ##
   # Run properties
