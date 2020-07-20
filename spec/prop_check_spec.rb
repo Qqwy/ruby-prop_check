@@ -174,6 +174,5 @@ RSpec.describe PropCheck do
         expect(thing).to be true
       end
     end
-
   end
 end
