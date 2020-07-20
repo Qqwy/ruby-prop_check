@@ -165,14 +165,15 @@ RSpec.describe PropCheck do
     describe RSpec do
       require 'prop_check/rspec'
       extend PropCheck::RSpec
-      xit "adds forall to the example scope" do
+      it "adds forall to the example scope and brings generators inside PropCheck::Generators into scope`" do
         thing = nil
-        forall(x: PropCheck::Generators.integer) do |x:|
+        forall(x: integer) do |x:|
           expect(x).to be_a(Integer)
           thing = true
         end
         expect(thing).to be true
       end
     end
+
   end
 end
