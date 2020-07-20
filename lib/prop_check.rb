@@ -23,7 +23,7 @@ module PropCheck
   # Runs a property.
   #
   # See the README for more details.
-  def forall(*args, **kwargs, &block)
-    PropCheck::Property.forall(*args, **kwargs, &block)
+  def forall(*args, &block)
+    PropCheck::Property.forall(*args, &block)
   end
 end

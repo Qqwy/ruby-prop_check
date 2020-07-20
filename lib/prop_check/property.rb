@@ -19,7 +19,7 @@ module PropCheck
     # (so `forall(a: Generators.integer) do ... end` and forall(a: Generators.integer).check do ... end` are the same)
     def self.forall(*bindings, &block)
 
-      property = new(bindings)
+      property = new(*bindings)
 
       return property.check(&block) if block_given?
 
@@ -49,7 +49,7 @@ module PropCheck
       raise ArgumentError, 'No bindings specified!' if bindings.empty?
 
       @bindings = bindings
-      @condition = -> { true }
+      @condition = proc { true }
       @config = self.class.configuration
     end
 
@@ -87,7 +87,10 @@ module PropCheck
     # Only filter if you have few inputs to reject. Otherwise, improve your generators.
     def where(&condition)
       original_condition = @condition.dup
-      @condition = -> { instance_exec(&original_condition) && instance_exec(&condition) }
+      @condition = proc do |*args|
+        # instance_exec(&original_condition) && instance_exec(&condition)
+        original_condition.call(*args) && condition.call(*args)
+      end
 
       self
     end
@@ -95,7 +98,8 @@ module PropCheck
     ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
-      binding_generator = PropCheck::Generators.tuple(bindings)
+      ap(@bindings)
+      binding_generator = PropCheck::Generators.tuple(*@bindings)
 
       n_runs = 0
       n_successful = 0
@@ -124,7 +128,8 @@ module PropCheck
     end
 
     private def check_attempt(generator_result, n_successful, &block)
-      CheckEvaluator.new(generator_result.root, &block).call
+      # CheckEvaluator.new(generator_result.root, &block).call
+      block.call(*generator_result.root)
 
     # immediately stop (without shrinnking) for when the app is asked
     # to close by outside intervention
@@ -161,7 +166,7 @@ module PropCheck
         .lazy
         .map { binding_generator.generate(size, rng) }
         .reject { |val| val.root == :"_PropCheck.filter_me" }
-        .select { |val| CheckEvaluator.new(val.root, &@condition).call }
+        .select { |val| @condition.call(*val.root) }
         .map do |result|
           n_runs += 1
           size += 1
@@ -234,7 +239,8 @@ module PropCheck
         io.print '.' if @config.verbose
 
         begin
-          CheckEvaluator.new(sibling.root, &fun).call
+          # CheckEvaluator.new(sibling.root, &fun).call
+          fun.call(*sibling.root)
         rescue Exception => e
           problem_child = sibling
           parent_siblings = siblings
