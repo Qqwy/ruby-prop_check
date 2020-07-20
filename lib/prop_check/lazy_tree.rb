@@ -73,7 +73,8 @@ module PropCheck
         [tree.root].lazy_append(new_children)
       end
 
-      squish.call(self, [])
+      squish
+        .call(self, [])
 
       # base = [root]
       # recursive = children.map(&:each)
@@ -99,7 +100,8 @@ module PropCheck
     #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).to_a
     #   => [1, 4, 2, 3]
     def to_a
-      each.force
+      each
+        .force
     end
 
     # TODO: fix implementation

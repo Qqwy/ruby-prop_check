@@ -72,7 +72,7 @@ module PropCheck
       #   end.flatten
       # end
       Generator.new do |size, rng|
-        outer_result = generate(size, rng)
+        outer_result = self.generate(size, rng)
         outer_result.bind do |outer_val|
           inner_generator = generator_proc.call(outer_val)
           inner_generator.generate(size, rng)
@@ -90,6 +90,25 @@ module PropCheck
         result = self.generate(size, rng)
         result.map(&proc)
       end
+    end
+
+    ##
+    # Creates a new Generator that only produces a value when the block `condition` returns a truthy value.
+    def where(&condition)
+      self.map do |result|
+        if condition.call(*result)
+          result
+        else
+          :"_PropCheck.filter_me"
+        end
+      end
+      # self.map do |*result|
+      #   if condition.call(*result)
+      #     result
+      #   else
+      #     :'_PropCheck.filter_me'
+      #   end
+      # end
     end
   end
 end

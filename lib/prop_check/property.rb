@@ -123,6 +123,10 @@ module PropCheck
     private def ensure_not_exhausted!(n_runs)
       return if n_runs >= @config.n_runs
 
+      raise_generator_exhausted!
+    end
+
+    private def raise_generator_exhausted!()
       raise Errors::GeneratorExhaustedError, """
         Could not perform `n_runs = #{@config.n_runs}` runs,
         (exhausted #{@config.max_generate_attempts} tries)
@@ -170,7 +174,7 @@ module PropCheck
       (0...@config.max_generate_attempts)
         .lazy
         .map { binding_generator.generate(size, rng) }
-        .reject { |val| val.root == :"_PropCheck.filter_me" }
+        .reject { |val| val.root.any? { |elem| elem == :"_PropCheck.filter_me" }}
         .select { |val| @condition.call(*val.root) }
         .map do |result|
           n_runs += 1

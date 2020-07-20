@@ -7,10 +7,10 @@ RSpec.describe PropCheck::Generator do
   doctest PropCheck::Generator
   doctest PropCheck::Generators
 
-  xdescribe "#where" do
+  describe "#where" do
     it "filters out results we do not like" do
       no_fizzbuzz = PropCheck::Generators.integer.where { |val| val % 3 != 0 && val % 5 != 0 }
-      PropCheck::forall(num: no_fizzbuzz) do
+      PropCheck::forall(num: no_fizzbuzz) do |num:|
         expect(num).to_not be(3)
         expect(num).to_not be(5)
         expect(num).to_not be(6)
@@ -21,13 +21,13 @@ RSpec.describe PropCheck::Generator do
     end
 
     it "might cause a Generator Exhaustion if we filter too much" do
-      never = PropCheck::Generators.nil.where { |val| val != nil }
+      never = PropCheck::Generators.integer().where { |val| val == nil }
       expect do
-        PropCheck::forall(thing: never) do
-          true
+        PropCheck::forall(never) do |never|
+          ap never
         end
       end.to raise_error do |error|
-        expect(error).to be_a(PropCheck::GeneratorExhaustedError)
+        expect(error).to be_a(PropCheck::Errors::GeneratorExhaustedError)
       end
     end
   end
