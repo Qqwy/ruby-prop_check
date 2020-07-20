@@ -66,8 +66,9 @@ _(to be precise: a method on the execution context is defined which returns the 
 Raise an exception from the block if there is a problem. If there is no problem, just return normally.
 
 ```ruby
+include PropCheck::Generators
 # testing that Enumerable#sort sorts in ascending order
-PropCheck.forall(numbers: array(integer())) do
+PropCheck.forall(array(integer)) do |numbers|
   sorted_numbers = numbers.sort
   
   # Check that no number is smaller than the previous number
@@ -76,6 +77,50 @@ PropCheck.forall(numbers: array(integer())) do
   end
 end
 ```
+
+
+Here is another example, using it inside a test case.
+Here we check if `naive_average` indeed always returns an integer for all arrays of numbers we can pass it:
+
+```ruby
+# Somewhere you have this function definition:
+def naive_average(array)
+  array.sum / array.length
+end
+
+# And then in a test case:
+include PropCheck::Generators
+PropCheck.forall(array(integer)) do |array|
+  result = naive_average(array)
+  unless result.is_a?(Integer) do
+    raise "Expected the average to be an integer!"
+  end
+end
+```
+
+When running this particular example PropCheck very quickly finds out that we have made a programming mistake:
+
+```ruby
+ZeroDivisionError: 
+(after 6 successful property test runs)
+Failed on: 
+`{
+    :array => []
+}`
+
+Exception message:
+---
+divided by 0
+---
+
+(shrinking impossible)
+---
+```
+
+Clearly we forgot to handle the case of an empty array being passed to the function.
+This is a good example of the kind of conceptual bugs that PropCheck (and property-based testing in general)
+are able to check for.
+
 
 #### Shrinking
 
@@ -106,21 +151,28 @@ A short summary:
 - Arrays and hashes shrink to fewer elements, as well as shrinking their elements.
 - Strings shrink to shorter strings, as well as characters earlier in their alphabet.
 
+### Builtin Generators
+
+PropCheck comes with [many builtin generators in the PropCheck::Generators](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generators) module.
+
+It contains generators for:
+- (any, positive, negative, etc.) integers, 
+- (any, only real-valued) floats, 
+- (any, printable only, alphanumeric only, etc) strings and symbols
+- fixed-size arrays and hashes 
+- as well as varying-size arrays and hashes.
+- and many more!
+
+It is common to call `include PropCheck::Generators` in e.g. your testing-suite files to be able to use these.
+If you want to be more explicit (but somewhat more verbose) when calling these functions. feel free to e.g. create a module-alias (like `PG = PropCheck::Generators`) instead.
 
 ### Writing Custom Generators
 
-PropCheck comes bundled with a bunch of common generators, for:
-- integers
-- floats
-- strings
-- symbols
-- arrays
-- hashes
-etc.
+As described in the previous section, PropCheck already comes bundled with a bunch of common generators.
 
 However, you can easily adapt them to generate your own datatypes:
 
-#### Generator#wrap
+#### Generators#constant / Generator#wrap
 
 Always returns the given value. No shrinking.
 

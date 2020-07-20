@@ -16,9 +16,9 @@ module PropCheck
     # a Property object is returned, which you can call the other instance methods
     # of this class on before finally passing a block to it using `#check`.
     # (so `forall(a: Generators.integer) do ... end` and forall(a: Generators.integer).check do ... end` are the same)
-    def self.forall(**bindings, &block)
+    def self.forall(*bindings, &block)
 
-      property = new(**bindings)
+      property = new(*bindings)
 
       return property.check(&block) if block_given?
 
@@ -44,10 +44,11 @@ module PropCheck
 
     attr_reader :bindings, :condition
 
-    def initialize(**bindings)
-      raise ArgumentError, 'No bindings specified!' if bindings.empty?
+    def initialize(*bindings, **kwbindings)
+      raise ArgumentError, 'No bindings specified!' if bindings.empty? && kwbindings.empty?
 
       @bindings = bindings
+      @kwbindings = kwbindings
       @condition = proc { true }
       @config = self.class.configuration
     end
@@ -96,7 +97,15 @@ module PropCheck
     ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
-      binding_generator = PropCheck::Generators.fixed_hash(**@bindings)
+      gens =
+        if @kwbindings != {}
+          kwbinding_generator = PropCheck::Generators.fixed_hash(**@kwbindings)
+          @bindings + [kwbinding_generator]
+        else
+          @bindings
+        end
+      binding_generator = PropCheck::Generators.tuple(*gens)
+      # binding_generator = PropCheck::Generators.fixed_hash(**@kwbindings)
 
       n_runs = 0
       n_successful = 0
@@ -125,7 +134,7 @@ module PropCheck
     end
 
     private def check_attempt(generator_result, n_successful, &block)
-      block.call(**generator_result.root)
+      block.call(*generator_result.root)
 
     # immediately stop (without shrinnking) for when the app is asked
     # to close by outside intervention
@@ -162,7 +171,7 @@ module PropCheck
         .lazy
         .map { binding_generator.generate(size, rng) }
         .reject { |val| val.root == :"_PropCheck.filter_me" }
-        .select { |val| @condition.call(**val.root) }
+        .select { |val| @condition.call(*val.root) }
         .map do |result|
           n_runs += 1
           size += 1
@@ -195,19 +204,26 @@ module PropCheck
     end
 
     private def post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
-      output.puts ''
-      output.puts "Shrunken input (after #{n_shrink_steps} shrink steps):"
-      output.puts "`#{print_roots(shrunken_result)}`"
-      output.puts ""
-      output.puts "Shrunken exception:\n---\n#{shrunken_exception}"
-      output.puts "---"
-      output.puts ""
-
+      if n_shrink_steps == 0
+        output.puts '(shrinking impossible)'
+      else
+        output.puts ''
+        output.puts "Shrunken input (after #{n_shrink_steps} shrink steps):"
+        output.puts "`#{print_roots(shrunken_result)}`"
+        output.puts ""
+        output.puts "Shrunken exception:\n---\n#{shrunken_exception}"
+        output.puts "---"
+        output.puts ""
+      end
       output
     end
 
-    private def print_roots(lazy_tree_hash)
-      lazy_tree_hash.ai
+    private def print_roots(lazy_tree_val)
+      if lazy_tree_val.is_a?(Array) && lazy_tree_val.length == 1 && lazy_tree_val[0].is_a?(Hash)
+        lazy_tree_val[0].ai
+      else
+        lazy_tree_val.ai
+      end
     end
 
     private def shrink(bindings_tree, io, &block)
@@ -232,7 +248,7 @@ module PropCheck
         io.print '.' if @config.verbose
 
         begin
-          block.call(**sibling.root)
+          block.call(*sibling.root)
         rescue Exception => e
           problem_child = sibling
           parent_siblings = siblings

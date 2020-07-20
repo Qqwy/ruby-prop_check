@@ -13,6 +13,25 @@ RSpec.describe PropCheck do
         expect { |block| PropCheck.forall(x: PropCheck::Generators.integer, &block) }.to yield_control
       end
 
+      it "accepts simple arguments" do
+        expect do
+          PropCheck.forall(PropCheck::Generators.integer, PropCheck::Generators.float) do |x, y|
+            expect(x).to be_a Integer
+            expect(y).to be_a Float
+          end
+        end.not_to raise_error
+      end
+
+      it "accepts keyword arguments" do
+        expect do
+          PropCheck.forall(x: PropCheck::Generators.integer, y: PropCheck::Generators.float) do |x:, y:|
+            expect(x).to be_a Integer
+            expect(y).to be_a Float
+          end
+        end.not_to raise_error
+      end
+
+
       it "will not shrink upon encountering a SystemExit" do
         expect do
           PropCheck.forall(x: PropCheck::Generators.integer) do |x:|
@@ -61,8 +80,8 @@ RSpec.describe PropCheck do
           expect(info.keys).to contain_exactly(*expected_keys)
 
           expect(info[:original_exception_message]).to eq("I do not like this number")
-          expect(info[:original_input]).to eq({x: exploding_val})
-          expect(info[:shrunken_input]).to eq({x: shrunken_val})
+          expect(info[:original_input]).to eq([{x: exploding_val}])
+          expect(info[:shrunken_input]).to eq([{x: shrunken_val}])
           expect(info[:n_successful]).to be_a(Integer)
           expect(info[:n_shrink_steps]).to be_a(Integer)
         end
