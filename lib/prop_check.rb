@@ -9,6 +9,13 @@ require 'prop_check/helper'
 # You probably want to look at the documentation of
 # PropCheck::Generator and PropCheck::Generators
 # to find out more about how to use generators.
+#
+# Common usage is to call `extend PropCheck` in your (testing) modules.
+#
+# This will:
+# 1. Add the local method `forall` which  will call `PropCheck.forall`
+# 2. `include PropCheck::Generators`.
+#
 module PropCheck
   module Errors
     class Error < StandardError; end

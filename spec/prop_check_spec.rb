@@ -174,9 +174,9 @@ RSpec.describe PropCheck do
         end
       end
     end
-    describe RSpec do
-      require 'prop_check/rspec'
-      extend PropCheck::RSpec
+    describe "including PropCheck in a testing-environment" do
+      include PropCheck
+      include PropCheck::Generators
       it "adds forall to the example scope and brings generators inside PropCheck::Generators into scope`" do
         thing = nil
         forall(x: integer) do |x:|
