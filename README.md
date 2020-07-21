@@ -90,8 +90,8 @@ end
 
 # And then in a test case:
 include PropCheck::Generators
-PropCheck.forall(array(integer)) do |array|
-  result = naive_average(array)
+PropCheck.forall(numbers: array(integer)) do |numbers:|
+  result = naive_average(numbers)
   unless result.is_a?(Integer) do
     raise "Expected the average to be an integer!"
   end
@@ -105,7 +105,7 @@ ZeroDivisionError:
 (after 6 successful property test runs)
 Failed on: 
 `{
-    :array => []
+    :numbers => []
 }`
 
 Exception message:
