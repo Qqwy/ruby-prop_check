@@ -87,13 +87,27 @@ Here we check if `naive_average` indeed always returns an integer for all arrays
 def naive_average(array)
   array.sum / array.length
 end
-
+```
+```ruby
 # And then in a test case:
 include PropCheck::Generators
 PropCheck.forall(numbers: array(integer)) do |numbers:|
   result = naive_average(numbers)
   unless result.is_a?(Integer) do
     raise "Expected the average to be an integer!"
+  end
+end
+
+# Or if you e.g. are using RSpec:
+describe "#naive_average" do
+  include PropCheck
+  include PropCheck::Generators
+
+  it "returns an integer for any input" do
+    forall(numbers: array(integer)) do |numbers:|
+      result = naive_average(numbers)      
+      expect(result).to be_a(Integer)
+    end
   end
 end
 ```
