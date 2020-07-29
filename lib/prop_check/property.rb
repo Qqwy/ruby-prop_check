@@ -105,8 +105,8 @@ module PropCheck
     # Only filter if you have few inputs to reject. Otherwise, improve your generators.
     def where(&condition)
       original_condition = @condition.dup
-      @condition = proc do |**kwargs|
-        original_condition.call(**kwargs) && condition.call(**kwargs)
+      @condition = proc do |*args|
+        original_condition.call(*args) && condition.call(*args)
       end
 
       self
