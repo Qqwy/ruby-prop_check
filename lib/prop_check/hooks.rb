@@ -42,6 +42,7 @@ class PropCheck::Hooks
   # Adds `hook` to the `after` proc.
   # It is called before earlier-added `after` procs.
   def add_after(&hook)
+    old_after = @after
     @after = proc {
       hook.call
       old_after.call
@@ -58,8 +59,8 @@ class PropCheck::Hooks
   # a `before` and `after` callback.
   def add_around(&hook)
     around_before, around_after = split_around(hook)
-    add_before(around_before)
-    add_after(around_after)
+    add_before(&around_before)
+    add_after(&around_after)
   end
 
   private def split_around(hook)

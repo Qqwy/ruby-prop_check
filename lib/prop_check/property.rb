@@ -117,6 +117,16 @@ module PropCheck
       self
     end
 
+    def after(&hook)
+      @hooks.add_after(&hook)
+      self
+    end
+
+    def around(&hook)
+      @hooks.add_around(&hook)
+      self
+    end
+
     ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)

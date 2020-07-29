@@ -181,6 +181,34 @@ RSpec.describe PropCheck do
           end.to yield_control.exactly(100).times
         end
       end
+      describe "#after" do
+        it "calls the after block after every generated value" do
+          expect do |after_hook|
+            PropCheck.forall(PropCheck::Generators.integer).with_config(n_runs: 100).after(&after_hook).check do
+            end
+          end.to yield_control.exactly(100).times
+        end
+      end
+
+
+      describe "#around" do
+        it "calls the around block around every generated value" do
+          before_calls = 0
+          after_calls = 0
+          inner_calls = 0
+          around_hook = proc { |&block|
+            before_calls += 1
+            block.call
+            after_calls += 1
+          }
+          PropCheck.forall(PropCheck::Generators.integer).with_config(n_runs: 100).around(&around_hook).check do
+            inner_calls += 1
+          end
+          expect before_calls.to eq(100)
+          expect after_calls.to eq(100)
+          expect inner_calls.to eq(100)
+        end
+      end
     end
 
     describe "including PropCheck in a testing-environment" do
