@@ -4,8 +4,10 @@ source "https://rubygems.org"
 gemspec
 
 gem "bundler", "~> 2.0"
-gem "rake", "~> 12.3", require: false, group: :test
-gem "rspec", "~> 3.0", require: false, group: :test
-gem "doctest-rspec", require: false, group: :test
-gem "simplecov", require: false, group: :test
 
+group :test do
+  gem "rake", "~> 12.3", require: false
+  gem "rspec", "~> 3.0", require: false
+  gem "doctest-rspec", require: false
+  gem "simplecov", require: false
+end
