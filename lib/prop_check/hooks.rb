@@ -23,6 +23,10 @@ class PropCheck::Hooks
     @after = proc {}
   end
 
+  def wrap_enum(enumerable)
+    PropCheck::Hooks::Enumerable.new(enumerable, self)
+  end
+
   ##
   # Adds `hook` to the `before` proc.
   # It is called after earlier-added `before` procs.
