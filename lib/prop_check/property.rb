@@ -140,7 +140,7 @@ module PropCheck
       binding_generator = PropCheck::Generators.tuple(*gens)
       # binding_generator = PropCheck::Generators.fixed_hash(**@kwbindings)
 
-      n_runs = 1
+      n_runs = 0
       n_successful = 0
 
       # Loop stops at first exception
@@ -200,14 +200,14 @@ module PropCheck
     end
 
     private def attempts_enum(binding_generator)
-      @hooks
+        @hooks
         .wrap_enum(raw_attempts_enum(binding_generator))
         .lazy
+        .take(@config.n_runs)
     end
 
     private def raw_attempts_enum(binding_generator)
       rng = Random::DEFAULT
-      n_runs = 0
       size = 1
       (0...@config.max_generate_attempts)
         .lazy
@@ -215,12 +215,10 @@ module PropCheck
         .reject { |val| val.root.any? { |elem| elem == :"_PropCheck.filter_me" }}
         .select { |val| @condition.call(*val.root) }
         .map do |result|
-          n_runs += 1
           size += 1
 
           result
         end
-        .take_while { n_runs < @config.n_runs }
     end
 
     private def show_problem_output(problem, generator_results, n_successful, &block)

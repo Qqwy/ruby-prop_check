@@ -17,10 +17,11 @@
 # Alternatively, check out `PropCheck::Hooks::Enumerable` which allows
 # wrapping the elements of an enumerable with hooks.
 class PropCheck::Hooks
-  attr_reader :before, :after
+  attr_reader :before, :after, :around
   def initialize()
     @before = proc {}
     @after = proc {}
+    @around = proc { |*args, &block| block.call(*args) }
   end
 
   def wrap_enum(enumerable)
@@ -49,44 +50,61 @@ class PropCheck::Hooks
     }
   end
 
-  ##
-  # Adds `hook` as an around hook.
-  #
-  # An around hook is passed the inner implementation as a block
-  # and should call it using `yield` (or `&block.call` etc) at the appropriate time.
-  #
-  # Internally we use continuations to 'split' `hook` into
-  # a `before` and `after` callback.
   def add_around(&hook)
-    around_before, around_after = split_around(hook)
-    add_before(&around_before)
-    add_after(&around_after)
-  end
-
-  private def split_around(hook)
-    require 'continuation'
-    after_cont = nil
-
-    around_before = proc do |*args|
-      callcc do |outer_cont|
-        hook.call(*args) do |*hook_args|
-          callcc do |cont|
-            after_cont = cont
-            # Returns the args `hook` yields with from the `around_before` proc.
-            outer_cont.call(*hook_args)
-          end
-        end
+    old_around = @around
+    @around = proc do |&block|
+      old_around.call do |*args|
+        hook.call(*args, &block)
       end
     end
-
-    around_after = proc do |*args|
-      # Injects the arguments given to the `around_after` block
-      # as return values of the `yield` that `hook` has used.
-      after_cont.call(*args)
-    end
-
-    [around_before, around_after]
   end
+
+  # ##
+  # # Adds `hook` as an around hook.
+  # #
+  # # An around hook is passed the inner implementation as a block
+  # # and should call it using `yield` (or `&block.call` etc) at the appropriate time.
+  # #
+  # # Internally we use continuations to 'split' `hook` into
+  # # a `before` and `after` callback.
+  # def add_around(&hook)
+  #   around_before, around_after = split_around(hook)
+  #   add_before(&around_before)
+  #   add_after(&around_after)
+  # end
+
+  # private def split_around(hook)
+  #   require 'fiber'
+  #   after_cont = nil
+
+  #   around_before = proc do |*args|
+  #     outer_cont = Fiber.current
+  #     hook.call(*args) do |*hook_args|
+  #       Fiber.new do
+  #         after_cont = Fiber.current
+  #         outer_cont.resume(*hook_args)
+  #       end.resume
+  #     end
+  #     # Fiber.new do
+  #     #   outer_cont = Fiber.current
+  #     #   hook.call(*args) do |*hook_args|
+  #     #     Fiber.new do
+  #     #       after_cont = Fiber.current
+  #     #       # Returns the args `hook` yields with from the `around_before` proc.
+  #     #       outer_cont.resume(*hook_args)
+  #     #     end.resume
+  #     #   end
+  #     # end.resume
+  #   end
+
+  #   around_after = proc do |*args|
+  #     # Injects the arguments given to the `around_after` block
+  #     # as return values of the `yield` that `hook` has used.
+  #     after_cont.resume(*args)
+  #   end
+
+  #   [around_before, around_after]
+  # end
 
   ##
   # Wraps enumerable `inner` with a `PropCheck::Hooks` object
@@ -110,7 +128,9 @@ class PropCheck::Hooks
       loop do
         begin
           @hooks.before.call()
-          yield enum.next(&block)
+          @hooks.around.call do
+            yield enum.next(&block)
+          end
         ensure
           @hooks.after.call()
         end
