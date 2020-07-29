@@ -2,6 +2,7 @@ require 'stringio'
 require "awesome_print"
 
 require 'prop_check/property/configuration'
+require 'prop_check/hooks'
 module PropCheck
   ##
   # Run properties
@@ -67,6 +68,7 @@ module PropCheck
       @kwbindings = kwbindings
       @condition = proc { true }
       @config = self.class.configuration
+      @hooks = PropCheck::Hooks.new
     end
 
     ##
@@ -103,10 +105,25 @@ module PropCheck
     # Only filter if you have few inputs to reject. Otherwise, improve your generators.
     def where(&condition)
       original_condition = @condition.dup
-      @condition = proc do |**kwargs|
-        original_condition.call(**kwargs) && condition.call(**kwargs)
+      @condition = proc do |*args|
+        original_condition.call(*args) && condition.call(*args)
       end
 
+      self
+    end
+
+    def before(&hook)
+      @hooks.add_before(&hook)
+      self
+    end
+
+    def after(&hook)
+      @hooks.add_after(&hook)
+      self
+    end
+
+    def around(&hook)
+      @hooks.add_around(&hook)
       self
     end
 
@@ -127,7 +144,7 @@ module PropCheck
       n_successful = 0
 
       # Loop stops at first exception
-      attempts_enumerator(binding_generator).each do |generator_result|
+      attempts_enum(binding_generator).each do |generator_result|
         n_runs += 1
         check_attempt(generator_result, n_successful, &block)
         n_successful += 1
@@ -182,10 +199,15 @@ module PropCheck
       raise e, output_string, e.backtrace
     end
 
-    private def attempts_enumerator(binding_generator)
+    private def attempts_enum(binding_generator)
+        @hooks
+        .wrap_enum(raw_attempts_enum(binding_generator))
+        .lazy
+        .take(@config.n_runs)
+    end
 
+    private def raw_attempts_enum(binding_generator)
       rng = Random::DEFAULT
-      n_runs = 0
       size = 1
       (0...@config.max_generate_attempts)
         .lazy
@@ -193,12 +215,10 @@ module PropCheck
         .reject { |val| val.root.any? { |elem| elem == :"_PropCheck.filter_me" }}
         .select { |val| @condition.call(*val.root) }
         .map do |result|
-          n_runs += 1
           size += 1
 
           result
         end
-        .take_while { n_runs <= @config.n_runs }
     end
 
     private def show_problem_output(problem, generator_results, n_successful, &block)
@@ -253,7 +273,7 @@ module PropCheck
       parent_siblings = nil
       problem_exception = nil
       shrink_steps = 0
-      (0..@config.max_shrink_steps).each do
+      @hooks.wrap_enum(0..@config.max_shrink_steps).lazy.each do
         begin
           sibling = siblings.next
         rescue StopIteration

@@ -27,6 +27,7 @@ Before releasing this gem on Rubygems, the following things need to be finished:
  - [x] Look into customization of settings from e.g. command line arguments.
 - [x] Good, unicode-compliant, string generators.
 - [x] Filtering generator outputs.
+- [x] Before/after/around hooks to add setup/teardown logic to be called before/after/around each time a check is run with new data.
 
 # Nice-to-haves
  

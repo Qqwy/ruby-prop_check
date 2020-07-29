@@ -12,3 +12,4 @@
 
 # .gem version files
 *.gem
+Gemfile.lock
