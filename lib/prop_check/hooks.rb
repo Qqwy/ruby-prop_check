@@ -17,7 +17,7 @@
 # Alternatively, check out `PropCheck::Hooks::Enumerable` which allows
 # wrapping the elements of an enumerable with hooks.
 class PropCheck::Hooks
-  attr_reader :before, :after, :around
+  # attr_reader :before, :after, :around
   def initialize()
     @before = proc {}
     @after = proc {}
@@ -28,11 +28,37 @@ class PropCheck::Hooks
     PropCheck::Hooks::Enumerable.new(enumerable, self)
   end
 
+
+  ##
+  # Wraps a block with all hooks that were configured this far.
+  #
+  # This means that whenever the block is called,
+  # the before/around/after hooks are called before/around/after it.
+  def wrap_block(&block)
+    proc { |*args| call(*args, &block) }
+  end
+
+  ##
+  # Wraps a block with all hooks that were configured this far,
+  # and immediately calls it using the given `*args`.
+  #
+  # See also #wrap_block
+  def call(*args, &block)
+    begin
+      @before.call()
+      @around.call do
+        block.call(*args)
+      end
+    ensure
+      @after.call()
+    end
+  end
+
   ##
   # Adds `hook` to the `before` proc.
   # It is called after earlier-added `before` procs.
   def add_before(&hook)
-    old_before = before
+    old_before = @before
     @before = proc {
       old_before.call
       hook.call
@@ -50,6 +76,9 @@ class PropCheck::Hooks
     }
   end
 
+  ##
+  # Adds `hook` to the `around` proc.
+  # It is called _inside_ earlier-added `around` procs.
   def add_around(&hook)
     old_around = @around
     @around = proc do |&block|
@@ -59,53 +88,6 @@ class PropCheck::Hooks
     end
   end
 
-  # ##
-  # # Adds `hook` as an around hook.
-  # #
-  # # An around hook is passed the inner implementation as a block
-  # # and should call it using `yield` (or `&block.call` etc) at the appropriate time.
-  # #
-  # # Internally we use continuations to 'split' `hook` into
-  # # a `before` and `after` callback.
-  # def add_around(&hook)
-  #   around_before, around_after = split_around(hook)
-  #   add_before(&around_before)
-  #   add_after(&around_after)
-  # end
-
-  # private def split_around(hook)
-  #   require 'fiber'
-  #   after_cont = nil
-
-  #   around_before = proc do |*args|
-  #     outer_cont = Fiber.current
-  #     hook.call(*args) do |*hook_args|
-  #       Fiber.new do
-  #         after_cont = Fiber.current
-  #         outer_cont.resume(*hook_args)
-  #       end.resume
-  #     end
-  #     # Fiber.new do
-  #     #   outer_cont = Fiber.current
-  #     #   hook.call(*args) do |*hook_args|
-  #     #     Fiber.new do
-  #     #       after_cont = Fiber.current
-  #     #       # Returns the args `hook` yields with from the `around_before` proc.
-  #     #       outer_cont.resume(*hook_args)
-  #     #     end.resume
-  #     #   end
-  #     # end.resume
-  #   end
-
-  #   around_after = proc do |*args|
-  #     # Injects the arguments given to the `around_after` block
-  #     # as return values of the `yield` that `hook` has used.
-  #     after_cont.resume(*args)
-  #   end
-
-  #   [around_before, around_after]
-  # end
-
   ##
   # Wraps enumerable `inner` with a `PropCheck::Hooks` object
   # such that the before/after/around hooks are called
@@ -113,6 +95,10 @@ class PropCheck::Hooks
   #
   # This is very helpful if you need to perform cleanup logic
   # before/after/around e.g. data is generated or fetched.
+  #
+  # Note that whatever is after a `yield` in an `around` hook
+  # is not guaranteed to be called (for instance when a StopIteration is raised).
+  # Thus: make sure you use `ensure` to clean up resources.
   class Enumerable
     include ::Enumerable
 
@@ -121,20 +107,16 @@ class PropCheck::Hooks
       @hooks = hooks
     end
 
-    def each(&block)
+    def each(&task)
       return to_enum(:each) unless block_given?
 
       enum = @inner.to_enum
-      loop do
-        begin
-          @hooks.before.call()
-          @hooks.around.call do
-            yield enum.next(&block)
-          end
-        ensure
-          @hooks.after.call()
-        end
+
+      wrapped_yielder = @hooks.wrap_block do
+        yield enum.next(&task)
       end
+
+      loop(&wrapped_yielder)
     end
   end
 end
