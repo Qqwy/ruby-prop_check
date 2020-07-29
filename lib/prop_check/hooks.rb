@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 ##
+# @api private
 # Contains the logic to combine potentially many before/after/around hooks
 # into a single pair of procedures called `before` and `after`.
 #
@@ -89,6 +90,7 @@ class PropCheck::Hooks
   end
 
   ##
+  # @api private
   # Wraps enumerable `inner` with a `PropCheck::Hooks` object
   # such that the before/after/around hooks are called
   # before/after/around each element that is fetched from `inner`.

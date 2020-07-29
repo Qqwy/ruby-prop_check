@@ -112,16 +112,35 @@ module PropCheck
       self
     end
 
+    ##
+    # Calls `hook` before each time a check is run with new data.
+    #
+    # This is useful to add setup logic
+    # When called multiple times, earlier-added hooks will be called _before_ `hook` is called.
     def before(&hook)
       @hooks.add_before(&hook)
       self
     end
 
+    ##
+    # Calls `hook` after each time a check is run with new data.
+    #
+    # This is useful to add teardown logic
+    # When called multiple times, earlier-added hooks will be called _after_ `hook` is called.
     def after(&hook)
       @hooks.add_after(&hook)
       self
     end
 
+    ##
+    # Calls `hook` around each time a check is run with new data.
+    #
+    # `hook` should `yield` to the passed block.
+    #
+    # When called multiple times, earlier-added hooks will be wrapped _around_ `hook`.
+    #
+    # Around hooks will be called after all `#before` hooks
+    # and before all `#after` hooks.
     def around(&hook)
       @hooks.add_around(&hook)
       self
