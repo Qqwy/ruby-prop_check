@@ -161,7 +161,6 @@ RSpec.describe PropCheck do
             expect(defined?(error.prop_check_info)).to be_nil
           end
         end
-
       end
 
       describe ".configure" do
@@ -173,7 +172,17 @@ RSpec.describe PropCheck do
           expect(PropCheck::forall(foo: PropCheck::Generators.integer).configuration.n_runs).to be 42
         end
       end
+
+      describe "#before" do
+        it "calls the before block before every generated value" do
+          expect do |before_hook|
+            PropCheck.forall(PropCheck::Generators.integer).with_config(n_runs: 100).before(&before_hook).check do
+            end
+          end.to yield_control.exactly(100).times
+        end
+      end
     end
+
     describe "including PropCheck in a testing-environment" do
       include PropCheck
       include PropCheck::Generators

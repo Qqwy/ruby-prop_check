@@ -2,6 +2,7 @@ require 'stringio'
 require "awesome_print"
 
 require 'prop_check/property/configuration'
+require 'prop_check/hooks'
 module PropCheck
   ##
   # Run properties
@@ -139,14 +140,17 @@ module PropCheck
 
     def before(&hook)
       @hooks.add_before(&hook)
+      self
     end
 
     def after(&hook)
       @hooks.add_after(&hook)
+      self
     end
 
     def around(&hook)
       @hooks.add_around(&hook)
+      self
     end
 
     private def ensure_not_exhausted!(n_runs)
@@ -195,26 +199,22 @@ module PropCheck
       raise e, output_string, e.backtrace
     end
 
-    private def attempts_generator(binding_generator)
-      @hooks.enumerate_wrapped(raw_attempts_enumerator(binding_generator))
+    private def attempts_enumerator(binding_generator)
+      PropCheck::Hooks::Enumerable.new(raw_attempts_enumerator(binding_generator), @hooks).lazy
     end
 
     private def raw_attempts_enumerator(binding_generator)
-
       rng = Random::DEFAULT
       n_runs = 0
       size = 1
+
       (0...@config.max_generate_attempts)
         .lazy
         .map { binding_generator.generate(size, rng) }
-        .reject { |val| val.root.any? { |elem| elem == :"_PropCheck.filter_me" }}
+        .reject { |val| val.root.any? { |elem| elem == :"_PropCheck.filter_me" } }
         .select { |val| @condition.call(*val.root) }
-        .map do |result|
-          n_runs += 1
-          size += 1
-
-          result
-        end
+        .tap { n_runs += 1 }
+        .tap { size += 1 }
         .take_while { n_runs <= @config.n_runs }
     end
 
