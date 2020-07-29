@@ -67,6 +67,7 @@ module PropCheck
       @kwbindings = kwbindings
       @condition = proc { true }
       @config = self.class.configuration
+      @hooks = PropCheck::Hooks.new
     end
 
     ##
@@ -136,6 +137,18 @@ module PropCheck
       ensure_not_exhausted!(n_runs)
     end
 
+    def before(&hook)
+      @hooks.add_before(&hook)
+    end
+
+    def after(&hook)
+      @hooks.add_after(&hook)
+    end
+
+    def around(&hook)
+      @hooks.add_around(&hook)
+    end
+
     private def ensure_not_exhausted!(n_runs)
       return if n_runs >= @config.n_runs
 
@@ -182,7 +195,11 @@ module PropCheck
       raise e, output_string, e.backtrace
     end
 
-    private def attempts_enumerator(binding_generator)
+    private def attempts_generator(binding_generator)
+      @hooks.enumerate_wrapped(raw_attempts_enumerator(binding_generator))
+    end
+
+    private def raw_attempts_enumerator(binding_generator)
 
       rng = Random::DEFAULT
       n_runs = 0
