@@ -3,6 +3,7 @@ require "awesome_print"
 
 require 'prop_check/property/configuration'
 require 'prop_check/property/output_formatter'
+require 'prop_check/property/shrinker'
 require 'prop_check/hooks'
 module PropCheck
   ##
@@ -254,41 +255,8 @@ module PropCheck
       [output, shrunken_result, shrunken_exception, n_shrink_steps]
     end
 
-
     private def shrink(bindings_tree, io, &block)
-      io.puts 'Shrinking...' if @config.verbose
-      problem_child = bindings_tree
-      siblings = problem_child.children.lazy
-      parent_siblings = nil
-      problem_exception = nil
-      shrink_steps = 0
-      @hooks.wrap_enum(0..@config.max_shrink_steps).lazy.each do
-        begin
-          sibling = siblings.next
-        rescue StopIteration
-          break if parent_siblings.nil?
-
-          siblings = parent_siblings.lazy
-          parent_siblings = nil
-          next
-        end
-
-        shrink_steps += 1
-        io.print '.' if @config.verbose
-
-        begin
-          block.call(*sibling.root)
-        rescue Exception => e
-          problem_child = sibling
-          parent_siblings = siblings
-          siblings = problem_child.children.lazy
-          problem_exception = e
-        end
-      end
-
-      io.puts "(Note: Exceeded #{@config.max_shrink_steps} shrinking steps, the maximum.)" if shrink_steps >= @config.max_shrink_steps
-
-      [problem_child.root, problem_exception, shrink_steps]
+      PropCheck::Property::Shrinker.call(bindings_tree, io, @hooks, @config, &block)
     end
   end
 end
