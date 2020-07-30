@@ -27,7 +27,7 @@ class PropCheck::Property::Shrinker
   end
 
   private def shrink(&block)
-    @hooks.wrap_enum(0..@config.max_shrink_steps).lazy.each do
+    wrapped_enum.each do
       instruction, sibling = safe_read_sibling
       break if instruction == :break
       next if instruction == :next
@@ -37,6 +37,10 @@ class PropCheck::Property::Shrinker
 
       safe_call_block(sibling, &block)
     end
+  end
+
+  private def wrapped_enum
+    @hooks.wrap_enum(0..@config.max_shrink_steps).lazy
   end
 
   private def safe_read_sibling
