@@ -19,6 +19,14 @@ class PropCheck::Property::Shrinker
   def call(&block)
     @io.puts 'Shrinking...' if @config.verbose
 
+    shrink(&block)
+
+    print_shrinking_exceeded_message if @shrink_steps >= @config.max_shrink_steps
+
+    [@problem_child.root, @problem_exception, @shrink_steps]
+  end
+
+  private def shrink(&block)
     @hooks.wrap_enum(0..@config.max_shrink_steps).lazy.each do
       instruction, sibling = safe_read_sibling
       break if instruction == :break
@@ -29,10 +37,6 @@ class PropCheck::Property::Shrinker
 
       safe_call_block(sibling, &block)
     end
-
-    print_shrinking_exceeded_message if @shrink_steps >= @config.max_shrink_steps
-
-    [@problem_child.root, @problem_exception, @shrink_steps]
   end
 
   private def safe_read_sibling
