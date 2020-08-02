@@ -23,5 +23,13 @@ module PropCheck
         end
       end.lazy
     end
+
+    ##
+    # allow lazy appending of two (potentially lazy) enumerators:
+    #   >> PropCheck::Helper::LazyAppend.lazy_append([1,2,3],[4,5.6]).to_a
+    #   => [1,2,3,4,5,6]
+    def lazy_append(this_enumerator, other_enumerator)
+      [this_enumerator, other_enumerator].lazy.flat_map(&:lazy)
+    end
   end
 end

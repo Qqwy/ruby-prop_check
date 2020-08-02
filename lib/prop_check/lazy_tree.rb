@@ -1,13 +1,11 @@
 # frozen_string_literal: true
 
-require 'prop_check/helper/lazy_append'
-
 module PropCheck
   ##
   # A Rose tree with the root being eager,
   # and the children computed lazily, on demand.
   class LazyTree
-    using PropCheck::Helper::LazyAppend
+    require 'prop_check/helper'
 
     attr_accessor :root, :children
     def initialize(root, children = [].lazy)
@@ -38,7 +36,7 @@ module PropCheck
     #   root_children = root_tree.children
     #   flattened_children = children.map(&:flatten)
 
-    #   combined_children = root_children.lazy_append(flattened_children)
+    #   combined_children = PropCheck::Helper.lazy_append(root_children, flattened_children)
 
     #   LazyTree.new(root_root, combined_children)
     # end
@@ -53,7 +51,7 @@ module PropCheck
       inner_children = inner_tree.children
       mapped_children = children.map { |child| child.bind(&fun) }
 
-      combined_children = inner_children.lazy_append(mapped_children)
+      combined_children = PropCheck::Helper.lazy_append(inner_children, mapped_children)
 
       LazyTree.new(inner_root, combined_children)
     end
@@ -70,7 +68,7 @@ module PropCheck
     def each(&block)
       squish = lambda do |tree, list|
         new_children = tree.children.reduce(list) { |acc, elem| squish.call(elem, acc) }
-        [tree.root].lazy_append(new_children)
+        PropCheck::Helper.lazy_append([tree.root], new_children)
       end
 
       squish
@@ -78,7 +76,7 @@ module PropCheck
 
       # base = [root]
       # recursive = children.map(&:each)
-      # res = base.lazy_append(recursive)
+      # res = PropCheck::Helper.lazy_append(base, recursive)
 
       # return res.each(&block) if block_given?
 
