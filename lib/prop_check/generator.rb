@@ -28,7 +28,9 @@ module PropCheck
 
       (0..max_consecutive_attempts).each do
         res = @block.call(**kwargs)
-        return res unless res.root == :"_PropCheck.filter_me"
+        next if res.root == :"_PropCheck.filter_me"
+
+        return res
       end
 
       raise Errors::GeneratorExhaustedError, """
