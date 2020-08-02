@@ -88,8 +88,8 @@ RSpec.describe PropCheck do
           expect(info.keys).to contain_exactly(*expected_keys)
 
           expect(info[:original_exception_message]).to eq("I do not like this number")
-          expect(info[:original_input]).to eq([{x: exploding_val}])
-          expect(info[:shrunken_input]).to eq([{x: shrunken_val}])
+          expect(info[:original_input]).to eq({x: exploding_val})
+          expect(info[:shrunken_input]).to eq({x: shrunken_val})
           expect(info[:n_successful]).to be_a(Integer)
           expect(info[:n_shrink_steps]).to be_a(Integer)
         end
@@ -150,7 +150,7 @@ RSpec.describe PropCheck do
 
         it "raises an error if too much was filtered" do
           expect do
-            PropCheck.forall(x: PropCheck::Generators.nonpositive_integer).where { |x:|  x == 0}.check do
+            PropCheck.forall(x: PropCheck::Generators.positive_integer).where { |x:|  x == 0}.check do
             end
           end.to raise_error do |error|
             expect(error).to be_a(PropCheck::Errors::GeneratorExhaustedError)

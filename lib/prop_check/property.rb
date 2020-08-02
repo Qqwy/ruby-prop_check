@@ -264,7 +264,7 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
       size = 1
       (0...@config.max_generate_attempts)
         .lazy
-        .map { binding_generator.generate(size, rng) }
+        .map { binding_generator.generate(size: size, rng: rng, max_consecutive_attempts: @config.max_consecutive_attempts) }
         .map do |result|
           size += 1
 

@@ -60,7 +60,7 @@ module PropCheck
     #   >> r = Random.new(42); Generators.choose(0..5).sample(size: 20000, rng: r)
     #   => [3, 4, 2, 4, 4, 1, 2, 2, 2, 4]
     def choose(range)
-      Generator.new do |_size, rng|
+      Generator.new do |rng:, **|
         val = rng.rand(range)
         LazyTree.new(val, integer_shrink(val))
       end
@@ -74,14 +74,14 @@ module PropCheck
     #
     # Shrinks to integers closer to zero.
     #
-    #   >> Generators.integer.call(2, Random.new(42))
+    #   >> Generators.integer.call(size: 2, rng: Random.new(42))
     #   => 1
-    #   >> Generators.integer.call(10000, Random.new(42))
+    #   >> Generators.integer.call(size: 10000, rng: Random.new(42))
     #   => 5795
     #   >> r = Random.new(42); Generators.integer.sample(size: 20000, rng: r)
     #   => [-4205, -19140, 18158, -8716, -13735, -3150, 17194, 1962, -3977, -18315]
     def integer
-      Generator.new do |size, rng|
+      Generator.new do |size:, rng:, **|
         val = rng.rand(-size..size)
         LazyTree.new(val, integer_shrink(val))
       end
@@ -194,12 +194,12 @@ module PropCheck
     #
     # Shrinks element generators, one at a time (trying last one first).
     #
-    #   >> Generators.tuple(Generators.integer, Generators.real_float).call(10, Random.new(42))
+    #   >> Generators.tuple(Generators.integer, Generators.real_float).call(size: 10, rng: Random.new(42))
     #   => [-4, 13.0]
     def tuple(*generators)
-      Generator.new do |size, rng|
+      Generator.new do |**kwargs|
         LazyTree.zip(generators.map do |generator|
-          generator.generate(size, rng)
+          generator.generate(**kwargs)
         end)
       end
     end
@@ -211,7 +211,7 @@ module PropCheck
     #
     # Shrinks element generators.
     #
-    #    >> Generators.fixed_hash(a: Generators.integer(), b: Generators.real_float(), c: Generators.integer()).call(10, Random.new(42))
+    #    >> Generators.fixed_hash(a: Generators.integer(), b: Generators.real_float(), c: Generators.integer()).call(size: 10, rng: Random.new(42))
     #    => {:a=>-4, :b=>13.0, :c=>-3}
     def fixed_hash(hash)
       keypair_generators =

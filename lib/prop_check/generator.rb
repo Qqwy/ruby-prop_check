@@ -11,6 +11,7 @@ module PropCheck
     @@default_size = 10
     @@default_rng = Random.new
     @@max_consecutive_attempts = 100
+    @@default_kwargs = {size: @@default_size, rng: @@default_rng, max_consecutive_attempts: @@max_consecutive_attempts}
 
     ##
     # Being a special kind of Proc, a Generator wraps a block.
@@ -21,12 +22,13 @@ module PropCheck
     ##
     # Given a `size` (integer) and a random number generator state `rng`,
     # generate a LazyTree.
-    def generate(size = @@default_size, rng = @@default_rng, max_consecutive_attempts = @@max_consecutive_attempts)
-      (0..max_consecutive_attempts).each do
-        res = @block.call(size, rng)
-        next if res == :"PropCheck.filter_me"
+    def generate(**kwargs)
+      kwargs = @@default_kwargs.merge(kwargs)
+      max_consecutive_attempts = kwargs[:max_consecutive_attempts]
 
-        return res
+      (0..max_consecutive_attempts).each do
+        res = @block.call(**kwargs)
+        return res unless res.root == :"_PropCheck.filter_me"
       end
 
       raise Errors::GeneratorExhaustedError, """
@@ -40,18 +42,18 @@ module PropCheck
     # Generates a value, and only return this value
     # (drop information for shrinking)
     #
-    #   >> Generators.integer.call(1000, Random.new(42))
+    #   >> Generators.integer.call(size: 1000, rng: Random.new(42))
     #   => 126
-    def call(size = @@default_size, rng = @@default_rng)
-      generate(size, rng).root
+    def call(**kwargs)
+      generate(**@@default_kwargs.merge(kwargs)).root
     end
 
     ##
     # Returns `num_of_samples` values from calling this Generator.
     # This is mostly useful for debugging if a generator behaves as you intend it to.
-    def sample(num_of_samples = 10, size: @@default_size, rng: @@default_rng)
+    def sample(num_of_samples = 10, **kwargs)
       num_of_samples.times.map do
-        call(size, rng)
+        call(**@@default_kwargs.merge(kwargs))
       end
     end
 
@@ -61,10 +63,10 @@ module PropCheck
     #
     # Keen readers may notice this as the Monadic 'pure'/'return' implementation for Generators.
     #
-    #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
+    #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(size: 100, rng: Random.new(42))
     #   => [2, 79]
     def self.wrap(val)
-      Generator.new { |_size, _rng| LazyTree.wrap(val) }
+      Generator.new { LazyTree.wrap(val) }
     end
 
     ##
@@ -73,7 +75,7 @@ module PropCheck
     #
     # Keen readers may notice this as the Monadic 'bind' (sometimes known as '>>=') implementation for Generators.
     #
-    #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
+    #   >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(size: 100, rng: Random.new(42))
     #   => [2, 79]
     def bind(&generator_proc)
       # Generator.new do |size, rng|
@@ -83,11 +85,11 @@ module PropCheck
       #     inner_generator.generate(size, rng)
       #   end.flatten
       # end
-      Generator.new do |size, rng|
-        outer_result = self.generate(size, rng)
+      Generator.new do |**kwargs|
+        outer_result = self.generate(**kwargs)
         outer_result.bind do |outer_val|
           inner_generator = generator_proc.call(outer_val)
-          inner_generator.generate(size, rng)
+          inner_generator.generate(**kwargs)
         end
       end
     end
@@ -95,11 +97,11 @@ module PropCheck
     ##
     # Creates a new Generator that returns a value by running `proc` on the output of the current Generator.
     #
-    #   >> Generators.choose(32..128).map(&:chr).call(10, Random.new(42))
+    #   >> Generators.choose(32..128).map(&:chr).call(size: 10, rng: Random.new(42))
     #   => "S"
     def map(&proc)
-      Generator.new do |size, rng|
-        result = self.generate(size, rng)
+      Generator.new do |**kwargs|
+        result = self.generate(**kwargs)
         result.map(&proc)
       end
     end
@@ -114,13 +116,6 @@ module PropCheck
           :"_PropCheck.filter_me"
         end
       end
-      # self.map do |*result|
-      #   if condition.call(*result)
-      #     result
-      #   else
-      #     :'_PropCheck.filter_me'
-      #   end
-      # end
     end
   end
 end
