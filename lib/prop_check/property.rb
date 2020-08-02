@@ -117,21 +117,6 @@ module PropCheck
       self
     end
 
-    private def call_splatted(*val, **kwval, &block)
-      if kwval != {}
-        block.call(**kwval)
-      else
-        block.call(*val)
-      end
-      # case val
-      # when Array
-      #   block.call(*val)
-      # when Hash
-      #   block.call(**val)
-      # else
-      #   block.call(val)
-      # end
-    end
 
     ##
     # Calls `hook` before each time a check is run with new data.
@@ -224,7 +209,7 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
     end
 
     private def check_attempt(generator_result, n_successful, &block)
-      call_splatted(generator_result.root, &block)
+      PropCheck::Helper.call_splatted(generator_result.root, &block)
 
     # immediately stop (without shrinnking) for when the app is asked
     # to close by outside intervention

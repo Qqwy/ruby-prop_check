@@ -104,7 +104,7 @@ RSpec.describe PropCheck do
           expect(p.with_config(verbose: true).configuration[:verbose]).to be true
         end
         it "Runs the property test when called with a block" do
-          expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_config({}, &block) }.to yield_control
+          expect { |block| PropCheck.forall(x: PropCheck::Generators.integer).with_config(**{}, &block) }.to yield_control
         end
       end
 
