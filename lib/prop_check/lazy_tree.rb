@@ -9,10 +9,14 @@ module PropCheck
 
     include Enumerable
 
-    attr_accessor :root, :children
+    attr_accessor :root
     def initialize(root, children = [].lazy)
       @root = root
       @children = children
+    end
+
+    def children
+      @children.reject { |child| child.root == :"_PropCheck.filter_me" }
     end
 
     ##
@@ -121,5 +125,6 @@ module PropCheck
         end
       end
     end
+
   end
 end

@@ -82,5 +82,14 @@ RSpec.describe PropCheck::Generator do
     #     expect(user.name).to_not be(:"_PropCheck.filter_me")
     #   end
     # end
+
+    describe "while shrinking" do
+      it "will never allow filtered results" do
+        PG = PropCheck::Generators
+        # gen = PG.fixed_hash(x: PG.printable_string(empty: false).where { |str| !/\A[[:space:]]*\z/.match?(str) })
+        gen = PG.integer.where { |val| val.odd? }
+        expect(gen.generate.to_a).to_not include(:"_PropCheck.filter_me")
+      end
+    end
   end
 end
