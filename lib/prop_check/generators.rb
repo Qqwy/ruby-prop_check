@@ -229,16 +229,20 @@ module PropCheck
     # Shrinks to shorter arrays (with shrunken elements).
     # Accepted keyword arguments:
     #
-    # `empty:` When false, behaves the same as `min: 1`. (default: false)
+    # `empty:` When false, behaves the same as `min: 1`
     # `min:` Ensures at least this many elements are generated. (default: 0)
     # `max:` Ensures at most this many elements are generated. When nil, an arbitrary count is used instead. (default: nil)
     #
     #
+    #    >> Generators.array(Generators.positive_integer).sample(5, size: 1, rng: Random.new(42))
+    #    =>  [[2], [2], [2], [1], [2]]
     #    >> Generators.array(Generators.positive_integer).sample(5, size: 10, rng: Random.new(42))
     #    => [[10, 5, 1, 4], [5, 9, 1, 1, 11, 8, 4, 9, 11, 10], [6], [11, 11, 2, 2, 7, 2, 6, 5, 5], [2, 10, 9, 7, 9, 5, 11, 3]]
     #
-    #    >> Generators.array(Generators.positive_integer, empty: false).sample(5, size: 10, rng: Random.new(1))
-    #    =>  [[2, 3, 3, 2], [6], [11, 7, 10, 3], [4, 5], [11, 6, 9, 11, 2, 1, 5]]
+    #    >> Generators.array(Generators.positive_integer, empty: true).sample(5, size: 1, rng: Random.new(1))
+    #    =>  [[], [2], [], [], [2]]
+    #    >> Generators.array(Generators.positive_integer, empty: false).sample(5, size: 1, rng: Random.new(1))
+    #    =>  [[2], [1], [2], [1], [1]]
 
 
     def array(element_generator, min: 0, max: nil, empty: true)
@@ -246,7 +250,7 @@ module PropCheck
 
       res = proc do |count|
         count = min + 1 if count < min
-        count += 1 if count == min && !empty
+        count += 1 if count == min && min != 0
         generators = (min...count).map do
           element_generator.clone
         end
