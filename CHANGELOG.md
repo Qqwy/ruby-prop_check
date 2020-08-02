@@ -1,1 +1,4 @@
-- 0.8.0 New syntax that is more explicit, passng generated values to blocks as parameters.
+- 0.12.0 - `PropCheck::Generators#instance`
+- 0.11.0 - Improved syntax to support Ruby 2.7 and up without deprecation warnings, full support for `#where`.
+- 0.10.0 - Some bugfixes, support for `#where`
+- 0.8.0 - New syntax that is more explicit, passng generated values to blocks as parameters.

@@ -24,10 +24,12 @@ Before releasing this gem on Rubygems, the following things need to be finished:
  - [x] Filtering generators. 
   - [x] Customize the max. of samples to run.
   - [x] Stop after a ludicrous amount of generator runs, to prevent malfunctioning (infinitely looping) generators from blowing up someone's computer.
- - [x] Look into customization of settings from e.g. command line arguments.
+- [x] Look into customization of settings from e.g. command line arguments.
 - [x] Good, unicode-compliant, string generators.
 - [x] Filtering generator outputs.
 - [x] Before/after/around hooks to add setup/teardown logic to be called before/after/around each time a check is run with new data.
+- [x] `#instance` generator to allow the easy creation of generators for custom datatypes.
+- [ ] A usage guide.
 
 # Nice-to-haves
  
