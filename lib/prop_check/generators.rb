@@ -547,7 +547,7 @@ module PropCheck
     #   => "[<User name: \"S|.g\", age: 10>, <User name: \"rvjj\", age: 10>, <User name: \"7\\\"5T!w=\", age: 5>]"
     def instance(klass, *args, **kwargs)
       tuple(*args).bind do |vals|
-        fixed_hash(**kwargs).map do |**kwvals|
+        fixed_hash(**kwargs).map do |kwvals|
           if kwvals == {}
             klass.new(*vals)
           elsif vals == []
