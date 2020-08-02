@@ -7,6 +7,8 @@ module PropCheck
   class LazyTree
     require 'prop_check/helper'
 
+    include Enumerable
+
     attr_accessor :root, :children
     def initialize(root, children = [].lazy)
       @root = root
@@ -66,25 +68,15 @@ module PropCheck
     #   >> LazyTree.new(1, [LazyTree.new(2, [LazyTree.new(3)]), LazyTree.new(4)]).each.force
     #   => [1, 4, 2, 3]
     def each(&block)
-      squish = lambda do |tree, list|
-        new_children = tree.children.reduce(list) { |acc, elem| squish.call(elem, acc) }
-        PropCheck::Helper.lazy_append([tree.root], new_children)
-      end
+      self.to_enum(:each) unless block_given?
 
-      squish
-        .call(self, [])
+      squish([])
+      .each(&block)
+    end
 
-      # base = [root]
-      # recursive = children.map(&:each)
-      # res = PropCheck::Helper.lazy_append(base, recursive)
-
-      # return res.each(&block) if block_given?
-
-      # res
-
-      # res = [[root], children.flat_map(&:each)].lazy.flat_map(&:lazy)
-      # res = res.map(&block) if block_given?
-      # res
+    protected def squish(arr)
+      new_children = self.children.reduce(arr) { |acc, elem| elem.squish(acc) }
+      PropCheck::Helper.lazy_append([self.root], new_children)
     end
 
     ##

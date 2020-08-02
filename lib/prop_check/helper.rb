@@ -31,5 +31,19 @@ module PropCheck
     def lazy_append(this_enumerator, other_enumerator)
       [this_enumerator, other_enumerator].lazy.flat_map(&:lazy)
     end
+
+    def call_splatted(val, &block)
+      case val
+      when Hash
+        block.call(**val)
+      else
+        block.call(val)
+      end
+      # if kwval != {}
+      #   block.call(**kwval)
+      # else
+      #   block.call(*val)
+      # end
+    end
   end
 end

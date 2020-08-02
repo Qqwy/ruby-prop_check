@@ -1,3 +1,4 @@
+require 'prop_check/helper'
 class PropCheck::Property::Shrinker
   def initialize(bindings_tree, io, hooks, config)
     @problem_child = bindings_tree
@@ -62,7 +63,7 @@ class PropCheck::Property::Shrinker
 
   private def safe_call_block(sibling, &block)
     begin
-      block.call(*sibling.root)
+      PropCheck::Helper.call_splatted(sibling.root, &block)
     # It is correct that we want to rescue _all_ Exceptions
     # not only 'StandardError's
     rescue Exception => e
