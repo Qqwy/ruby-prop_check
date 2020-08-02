@@ -10,6 +10,7 @@ module PropCheck
   class Generator
     @@default_size = 10
     @@default_rng = Random.new
+    @@max_consecutive_attempts = 100
 
     ##
     # Being a special kind of Proc, a Generator wraps a block.
@@ -20,8 +21,19 @@ module PropCheck
     ##
     # Given a `size` (integer) and a random number generator state `rng`,
     # generate a LazyTree.
-    def generate(size = @@default_size, rng = @@default_rng)
-      @block.call(size, rng)
+    def generate(size = @@default_size, rng = @@default_rng, max_consecutive_attempts = @@max_consecutive_attempts)
+      (0..max_consecutive_attempts).each do
+        res = @block.call(size, rng)
+        next if res == :"PropCheck.filter_me"
+
+        return res
+      end
+
+      raise Errors::GeneratorExhaustedError, """
+      Exhausted #{max_consecutive_attempts} consecutive generation attempts.
+
+      Probably too few generator results were adhering to a `where` condition.
+      """
     end
 
     ##
