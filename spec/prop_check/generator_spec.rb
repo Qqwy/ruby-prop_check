@@ -49,40 +49,6 @@ RSpec.describe PropCheck::Generator do
           .map { |name:, age:| [name, age]}
     end
 
-    # it 'filters properly' do
-    #   class String
-    #     BLANK_RE = /\A[[:space:]]*\z/
-
-    #     # A string is blank if it's empty or contains whitespaces only:
-    #     #
-    #     #   ''.blank?       # => true
-    #     #   '   '.blank?    # => true
-    #     #   "\t\n\r".blank? # => true
-    #     #   ' blah '.blank? # => false
-    #     #
-    #     # Unicode whitespace is supported:
-    #     #
-    #     #   "\u00a0".blank? # => true
-    #     #
-    #     def blank?
-    #       # The regexp that matches blank strings is expensive. For the case of empty
-    #       # strings we can speed up this method (~3.5x) with an empty? call. The
-    #       # penalty for the rest of strings is marginal.
-    #       empty? || BLANK_RE.match?(self)
-    #     end
-    #   end
-
-    #   PG = PropCheck::Generators
-
-    #   user_gen = PG.instance(User, name: PG.printable_ascii_string(empty: false).where { |str| !str.blank? }, age: PG.positive_integer)
-    #   # res = PG.fixed_hash(x: PG.printable_string.where { |str| !str.blank? }).sample(10000)
-    #   # res = user_gen.sample(10000)
-    #   # expect(res.map(&:name)).to include(:"_PropCheck.filter_me")
-    #   PropCheck.forall(user_gen) do |user|
-    #     expect(user.name).to_not be(:"_PropCheck.filter_me")
-    #   end
-    # end
-
     describe "while shrinking" do
       it "will never allow filtered results" do
         PG = PropCheck::Generators
