@@ -100,7 +100,9 @@ module PropCheck
     def map(&proc)
       Generator.new do |size, rng|
         result = self.generate(size, rng)
-        result.map(&proc)
+        result.map do |*val|
+          proc.call(*val)
+        end
       end
     end
 
