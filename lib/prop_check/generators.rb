@@ -520,5 +520,43 @@ module PropCheck
     def nillable(other_generator)
       frequency(9 => other_generator, 1 => constant(nil))
     end
+
+    ##
+    # Generates an instance of `klass`
+    # using `args` and/or `kwargs`
+    # as generators for the arguments that are passed to `klass.new`
+    #
+    # ## Example:
+    #
+    # Given a class like this:
+    #
+    #
+    #    class User
+    #      def initialize(name: , age: )
+    #        @name = name
+    #        @age = age
+    #      end
+    #
+    #      def inspect
+    #        "<User name: #{@name.inspect}, age: #{@age.inspect}>"
+    #      end
+    #    end
+    #
+    #   >> user_gen = Generators.instance_gen(User, name: Generators.printable_ascii_string, age: Generators.nonnegative_integer)
+    #   >> user_gen.sample(3, rng: Random.new(42)).inspect
+    #   => "[<User name: \"S|.g\", age: 10>, <User name: \"rvjj\", age: 10>, <User name: \"7\\\"5T!w=\", age: 5>]"
+    def instance_gen(klass, *args, **kwargs)
+      tuple(*args).bind do |vals|
+        fixed_hash(**kwargs).map do |**kwvals|
+        if kwvals == {}
+          klass.new(*vals)
+        elsif vals == []
+          klass.new(**kwvals)
+        else
+          klass.new(*vals, **kwvals)
+        end
+      end
+    end
+    end
   end
 end

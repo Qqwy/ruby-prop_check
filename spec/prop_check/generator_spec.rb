@@ -5,6 +5,18 @@ RSpec.describe PropCheck::Generator do
   Generator = PropCheck::Generator
   Generators = PropCheck::Generators
   doctest PropCheck::Generator
+
+  # Used in a PropCheck::Generators doctest
+  class User
+    def initialize(name: , age: )
+      @name = name
+      @age = age
+    end
+
+    def inspect
+      "<User name: #{@name.inspect}, age: #{@age.inspect}>"
+    end
+  end
   doctest PropCheck::Generators
 
   describe "#where" do
