@@ -31,6 +31,14 @@ RSpec.describe PropCheck do
         end.not_to raise_error
       end
 
+      it "raises when receiving both simple and keyword arguments at the same time" do
+        expect do
+          PropCheck.forall(PropCheck::Generators.integer, a: PropCheck::Generators.integer) do |int, hash|
+            expect(int).to be_a Integer
+            expect(hash[:x]).to be_a Float
+          end
+        end.to raise_error(ArgumentError)
+      end
 
       it "will not shrink upon encountering a SystemExit" do
         expect do
@@ -172,56 +180,58 @@ RSpec.describe PropCheck do
           expect(PropCheck::forall(foo: PropCheck::Generators.integer).configuration.n_runs).to be 42
         end
       end
+      describe "hooks" do
 
-      describe "#before" do
-        it "calls the before block before every generated value (even filtered ones)" do
-          expect do |before_hook|
+        describe "#before" do
+          it "calls the before block before every generated value (even filtered ones)" do
+            expect do |before_hook|
+              PropCheck.forall(PropCheck::Generators.integer)
+                .with_config(n_runs: 100)
+                .before(&before_hook)
+                .where { |x| x.odd? }
+                .check do
+              end
+            end.to yield_control.exactly(100).times
+          end
+        end
+
+        describe "#after" do
+          it "calls the after block after every generated value (even filtered ones)" do
+            expect do |after_hook|
+              PropCheck.forall(PropCheck::Generators.integer)
+                .with_config(n_runs: 100)
+                .after(&after_hook)
+                .where { |x| x.even? }
+                .check do
+              end
+            end.to yield_control.exactly(100).times
+          end
+        end
+
+        describe "#around" do
+          it "calls the around block around every generated value (even filtered ones)" do
+            before_calls = 0
+            after_calls = 0
+            inner_calls = 0
+            around_hook = proc do |&block|
+              begin
+                before_calls += 1
+                block.call
+              ensure
+                after_calls += 1
+              end
+            end
             PropCheck.forall(PropCheck::Generators.integer)
               .with_config(n_runs: 100)
-              .before(&before_hook)
+              .around(&around_hook)
               .where { |x| x.odd? }
               .check do
-            end
-          end.to yield_control.exactly(100).times
-        end
-      end
-
-      describe "#after" do
-        it "calls the after block after every generated value (even filtered ones)" do
-          expect do |after_hook|
-            PropCheck.forall(PropCheck::Generators.integer)
-              .with_config(n_runs: 100)
-              .after(&after_hook)
-              .where { |x| x.even? }
-              .check do
-            end
-          end.to yield_control.exactly(100).times
-        end
-      end
-
-      describe "#around" do
-        it "calls the around block around every generated value (even filtered ones)" do
-          before_calls = 0
-          after_calls = 0
-          inner_calls = 0
-          around_hook = proc do |&block|
-            begin
-              before_calls += 1
-              block.call
-            ensure
-              after_calls += 1
-            end
+                inner_calls += 1
+              end
+            expect(before_calls).to eq(100)
+            expect(after_calls).to eq(100)
+            expect(inner_calls).to eq(100)
           end
-          PropCheck.forall(PropCheck::Generators.integer)
-            .with_config(n_runs: 100)
-            .around(&around_hook)
-            .where { |x| x.odd? }
-            .check do
-              inner_calls += 1
-            end
-          expect(before_calls).to eq(100)
-          expect(after_calls).to eq(100)
-          expect(inner_calls).to eq(100)
         end
       end
     end

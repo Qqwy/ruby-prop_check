@@ -10,6 +10,7 @@ module PropCheck
   # where you want to use them.
   module Generators
     extend self
+
     ##
     # Always returns the same value, regardless of `size` or `rng` (random number generator state)
     #
@@ -265,7 +266,6 @@ module PropCheck
       end
     end
 
-
     ##
     # Generates a hash of key->values,
     # where each of the keys is made using the `key_generator`
@@ -275,11 +275,22 @@ module PropCheck
     #
     #    >> Generators.hash(Generators.printable_ascii_string, Generators.positive_integer).sample(5, size: 3, rng: Random.new(42))
     #    => [{""=>2, "g\\4"=>4, "rv"=>2}, {"7"=>2}, {"!"=>1, "E!"=>1}, {"kY5"=>2}, {}]
-    def hash(key_generator, value_generator, **kwargs)
+    def hash(*args, **kwargs)
+      if args.length == 2
+        hash_of(*args, **kwargs)
+      else
+        super
+      end
+    end
+
+    ##
+    #
+    # Alias for `#hash` that does not conflict with a possibly overriden `Object#hash`.
+    #
+    def hash_of(key_generator, value_generator, **kwargs)
       array(tuple(key_generator, value_generator), **kwargs)
         .map(&:to_h)
     end
-
 
     @alphanumeric_chars = [('a'..'z'), ('A'..'Z'), ('0'..'9')].flat_map(&:to_a).freeze
     ##

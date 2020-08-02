@@ -35,9 +35,9 @@ module PropCheck
     # a Property object is returned, which you can call the other instance methods
     # of this class on before finally passing a block to it using `#check`.
     # (so `forall(Generators.integer) do |val| ... end` and forall(Generators.integer).check do |val| ... end` are the same)
-    def self.forall(*bindings, &block)
+    def self.forall(*bindings, **kwbindings, &block)
 
-      property = new(*bindings)
+      property = new(*bindings, **kwbindings)
 
       return property.check(&block) if block_given?
 
@@ -66,8 +66,9 @@ module PropCheck
     def initialize(*bindings, **kwbindings)
       raise ArgumentError, 'No bindings specified!' if bindings.empty? && kwbindings.empty?
 
-      @bindings = bindings
-      @kwbindings = kwbindings
+      # @bindings = bindings
+      # @kwbindings = kwbindings
+      @gen = gen_from_bindings(bindings, kwbindings)
       @condition = proc { true }
       @config = self.class.configuration
       @hooks = PropCheck::Hooks.new
@@ -106,12 +107,30 @@ module PropCheck
     # you might encounter a GeneratorExhaustedError.
     # Only filter if you have few inputs to reject. Otherwise, improve your generators.
     def where(&condition)
-      original_condition = @condition.dup
-      @condition = proc do |*args|
-        original_condition.call(*args) && condition.call(*args)
-      end
+      # original_condition = @condition.dup
+      # @condition = proc do |val|
+      #   call_splatted(val, &original_condition) && call_splatted(val, &condition)
+      #   # original_condition.call(val) && condition.call(val)
+      # end
+      @gen = @gen.where(&condition)
 
       self
+    end
+
+    private def call_splatted(*val, **kwval, &block)
+      if kwval != {}
+        block.call(**kwval)
+      else
+        block.call(*val)
+      end
+      # case val
+      # when Array
+      #   block.call(*val)
+      # when Hash
+      #   block.call(**val)
+      # else
+      #   block.call(val)
+      # end
     end
 
     ##
@@ -155,27 +174,36 @@ module PropCheck
     ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
-      gens =
-        if @kwbindings != {}
-          kwbinding_generator = PropCheck::Generators.fixed_hash(**@kwbindings)
-          @bindings + [kwbinding_generator]
-        else
-          @bindings
-        end
-      binding_generator = PropCheck::Generators.tuple(*gens)
-      # binding_generator = PropCheck::Generators.fixed_hash(**@kwbindings)
-
       n_runs = 0
       n_successful = 0
 
       # Loop stops at first exception
-      attempts_enum(binding_generator).each do |generator_result|
+      attempts_enum(@gen).each do |generator_result|
         n_runs += 1
         check_attempt(generator_result, n_successful, &block)
         n_successful += 1
       end
 
       ensure_not_exhausted!(n_runs)
+    end
+
+    private def gen_from_bindings(bindings, kwbindings)
+      if bindings == [] && kwbindings != {}
+        PropCheck::Generators.fixed_hash(**kwbindings)
+      elsif bindings != [] && kwbindings == {}
+        if bindings.size == 1
+          bindings.first
+        else
+          PropCheck::Generators.tuple(*bindings)
+        end
+      else
+        raise ArgumentError,
+              'Attempted to use both normal and keyword bindings at the same time.
+This is not supported because of the separation of positional and keyword arguments
+(the old behaviour is deprecated in Ruby 2.7 and will be removed in 3.0)
+c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-keyword-arguments-in-ruby-3-0/
+     '
+      end
     end
 
     private def ensure_not_exhausted!(n_runs)
@@ -196,7 +224,7 @@ module PropCheck
     end
 
     private def check_attempt(generator_result, n_successful, &block)
-      block.call(*generator_result.root)
+      call_splatted(generator_result.root, &block)
 
     # immediately stop (without shrinnking) for when the app is asked
     # to close by outside intervention
@@ -237,8 +265,6 @@ module PropCheck
       (0...@config.max_generate_attempts)
         .lazy
         .map { binding_generator.generate(size, rng) }
-        .reject { |val| val.root.any? { |elem| elem == :"_PropCheck.filter_me" }}
-        .select { |val| @condition.call(*val.root) }
         .map do |result|
           size += 1
 

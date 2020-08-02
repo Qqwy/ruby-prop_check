@@ -28,5 +28,14 @@ RSpec.describe PropCheck::Generator do
         expect(error).to be_a(PropCheck::Errors::GeneratorExhaustedError)
       end
     end
+
+    it 'can be mapped over' do
+      PG = PropCheck::Generators
+      user_gen =
+        PG.fixed_hash(name: PG.string, age: PG.integer)
+          .map { |name:, age:| [name, age]}
+
+
+    end
   end
 end
