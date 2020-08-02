@@ -100,17 +100,15 @@ module PropCheck
     def map(&proc)
       Generator.new do |size, rng|
         result = self.generate(size, rng)
-        result.map do |*val|
-          proc.call(*val)
-        end
+        result.map(&proc)
       end
     end
 
     ##
     # Creates a new Generator that only produces a value when the block `condition` returns a truthy value.
     def where(&condition)
-      self.map do |*result|
-        if condition.call(*result)
+      self.map do |result|
+        if condition.call(result)
           result
         else
           :"_PropCheck.filter_me"
