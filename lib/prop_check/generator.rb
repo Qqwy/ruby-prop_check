@@ -95,7 +95,7 @@ module PropCheck
     ##
     # Creates a new Generator that only produces a value when the block `condition` returns a truthy value.
     def where(&condition)
-      self.map do |result|
+      self.map do |*result|
         if condition.call(*result)
           result
         else
