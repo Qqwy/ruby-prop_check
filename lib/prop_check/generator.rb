@@ -120,5 +120,19 @@ module PropCheck
         end
       end
     end
+
+    ##
+    # Resizes the generator to either grow faster or smaller than normal.
+    #
+    # `proc` takes the current size as input and is expected to return the new size.
+    # a size should always be a nonnegative integer.
+    #
+    #    >> Generators.integer.resize{}
+    def resize(&proc)
+      Generator.new do |size:, **other_kwargs|
+        new_size = proc.call(size)
+        self.generate(**other_kwargs, size: new_size)
+      end
+    end
   end
 end

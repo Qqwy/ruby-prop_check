@@ -82,9 +82,17 @@ module PropCheck
     #   => [-4205, -19140, 18158, -8716, -13735, -3150, 17194, 1962, -3977, -18315]
     def integer
       Generator.new do |size:, rng:, **|
+        ensure_proper_size!(size)
+
         val = rng.rand(-size..size)
         LazyTree.new(val, integer_shrink(val))
       end
+    end
+
+    private def ensure_proper_size!(size)
+      return if size.is_a?(Integer) && size >= 0
+
+      raise ArgumentError, "`size:` should be a nonnegative integer but got `#{size.inspect}`"
     end
 
     ##
@@ -262,7 +270,7 @@ module PropCheck
       if max.nil?
         nonnegative_integer.bind(&res)
       else
-        proc.call(max)
+        res.call(max)
       end
     end
 
