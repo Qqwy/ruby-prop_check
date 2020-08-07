@@ -10,7 +10,7 @@ module PropCheck
 
       def initialize(
             verbose: false,
-            n_runs: 1_000,
+            n_runs: 100,
             max_generate_attempts: 10_000,
             max_shrink_steps: 10_000,
             max_consecutive_attempts: 30

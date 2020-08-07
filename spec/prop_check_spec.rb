@@ -111,8 +111,8 @@ RSpec.describe PropCheck do
       describe "#check" do
         it "generates an error that Rspec can pick up" do
           expect do
-            PropCheck.forall(x: PropCheck::Generators.nonnegative_integer) do |x:|
-              expect(x).to be < 100
+            PropCheck.forall(x: PropCheck::Generators.nonnegative_integer).with_config(n_runs: 1_000) do |x:|
+              expect(x).to be < 10
             end
           end.to raise_error do |error|
             expect(error).to be_a(RSpec::Expectations::ExpectationNotMetError)
