@@ -61,18 +61,25 @@ module PropCheck
       yield(configuration)
     end
 
-    attr_reader :bindings, :condition
-
     def initialize(*bindings, **kwbindings)
-      raise ArgumentError, 'No bindings specified!' if bindings.empty? && kwbindings.empty?
-
-      # @bindings = bindings
-      # @kwbindings = kwbindings
-      @gen = gen_from_bindings(bindings, kwbindings)
-      @condition = proc { true }
+      # @condition = proc { true }
       @config = self.class.configuration
       @hooks = PropCheck::Hooks.new
+
+      @gen = gen_from_bindings(bindings, kwbindings) unless bindings.empty? && kwbindings.empty?
+      freeze
     end
+
+    # [:condition, :config, :hooks, :gen].each do |symbol|
+    #   define_method(symbol) do
+    #     self.instance_variable_get("@#{symbol}")
+    #   end
+
+    #   protected define_method("#{symbol}=") do |value|
+    #     duplicate = self.dup
+    #     duplicate.instance_variable_set("@#{symbol}", value)
+    #     duplicate
+    #   end
 
     ##
     # Returns the configuration of this property
@@ -91,11 +98,24 @@ module PropCheck
     # you can immediately pass a block to this method.
     # (so `forall(a: Generators.integer).with_config(verbose: true) do ... end` is the same as `forall(a: Generators.integer).with_config(verbose: true).check do ... end`)
     def with_config(**config, &block)
-      @config = @config.merge(config)
+      # new_config = @config.merge(config)
+      duplicate = self.dup
+      duplicate.instance_variable_set(:@config, @config.merge(config))
+      duplicate.freeze
 
-      return self.check(&block) if block_given?
+      return duplicate.check(&block) if block_given?
 
-      self
+      duplicate
+    end
+
+    def with_bindings(*bindings, **kwbindings)
+      raise ArgumentError, 'No bindings specified!' if bindings.empty? && kwbindings.empty?
+
+      duplicate = self.dup
+      duplicate.instance_variable_set(:@gen, gen_from_bindings(bindings, kwbindings))
+      # @gen = gen_from_bindings(bindings, kwbindings)
+      duplicate.freeze
+      duplicate
     end
 
     ##
@@ -112,9 +132,11 @@ module PropCheck
       #   call_splatted(val, &original_condition) && call_splatted(val, &condition)
       #   # original_condition.call(val) && condition.call(val)
       # end
-      @gen = @gen.where(&condition)
-
-      self
+      # @gen = @gen.where(&condition)
+      duplicate = self.dup
+      duplicate.instance_variable_set(:@gen, @gen.where(&condition))
+      duplicate.freeze
+      duplicate
     end
 
 
@@ -124,8 +146,12 @@ module PropCheck
     # This is useful to add setup logic
     # When called multiple times, earlier-added hooks will be called _before_ `hook` is called.
     def before(&hook)
-      @hooks.add_before(&hook)
-      self
+      duplicate = self.dup
+      duplicate.instance_variable_set(:@hooks, @hooks.dup.add_before(&hook))
+      # @hooks.add_before(&hook)
+      # self
+      duplicate.freeze
+      duplicate
     end
 
     ##
@@ -134,8 +160,13 @@ module PropCheck
     # This is useful to add teardown logic
     # When called multiple times, earlier-added hooks will be called _after_ `hook` is called.
     def after(&hook)
-      @hooks.add_after(&hook)
-      self
+      # @hooks.add_after(&hook)
+      # self
+
+      duplicate = self.dup
+      duplicate.instance_variable_set(:@hooks, @hooks.dup.add_after(&hook))
+      duplicate.freeze
+      duplicate
     end
 
     ##
@@ -152,8 +183,12 @@ module PropCheck
     # it is possible for the code after `yield` not to be called.
     # So make sure that cleanup logic is wrapped with the `ensure` keyword.
     def around(&hook)
-      @hooks.add_around(&hook)
-      self
+      # @hooks.add_around(&hook)
+      # self
+      duplicate = self.dup
+      duplicate.instance_variable_set(:@hooks, @hooks.dup.add_around(&hook))
+      duplicate.freeze
+      duplicate
     end
 
     ##
@@ -238,6 +273,8 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
     end
 
     private def attempts_enum(binding_generator)
+      ap @hooks
+
         @hooks
         .wrap_enum(raw_attempts_enum(binding_generator))
         .lazy

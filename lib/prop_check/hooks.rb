@@ -64,6 +64,7 @@ class PropCheck::Hooks
       old_before.call
       hook.call
     }
+    self
   end
 
   ##
@@ -75,6 +76,7 @@ class PropCheck::Hooks
       hook.call
       old_after.call
     }
+    self
   end
 
   ##
@@ -87,6 +89,7 @@ class PropCheck::Hooks
         hook.call(*args, &block)
       end
     end
+    self
   end
 
   ##
