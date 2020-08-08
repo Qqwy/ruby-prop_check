@@ -19,10 +19,11 @@
 # wrapping the elements of an enumerable with hooks.
 class PropCheck::Hooks
   # attr_reader :before, :after, :around
-  def initialize()
-    @before = proc {}
-    @after = proc {}
-    @around = proc { |*args, &block| block.call(*args) }
+  def initialize(before: proc {}, after: proc {}, around: proc { |*args, &block| block.call(*args) })
+    @before = before
+    @after = after
+    @around = around
+    freeze
   end
 
   def wrap_enum(enumerable)
@@ -59,37 +60,40 @@ class PropCheck::Hooks
   # Adds `hook` to the `before` proc.
   # It is called after earlier-added `before` procs.
   def add_before(&hook)
-    old_before = @before
-    @before = proc {
-      old_before.call
+    # old_before = @before
+    new_before = proc {
+      @before.call
       hook.call
     }
-    self
+    # self
+    self.class.new(before: new_before, after: @after, around: @around)
   end
 
   ##
   # Adds `hook` to the `after` proc.
   # It is called before earlier-added `after` procs.
   def add_after(&hook)
-    old_after = @after
-    @after = proc {
+    # old_after = @after
+    new_after = proc {
       hook.call
-      old_after.call
+      @after.call
     }
-    self
+    # self
+    self.class.new(before: @before, after: new_after, around: @around)
   end
 
   ##
   # Adds `hook` to the `around` proc.
   # It is called _inside_ earlier-added `around` procs.
   def add_around(&hook)
-    old_around = @around
-    @around = proc do |&block|
-      old_around.call do |*args|
+    # old_around = @around
+    new_around = proc do |&block|
+      @around.call do |*args|
         hook.call(*args, &block)
       end
     end
-    self
+    # self
+    self.class.new(before: @before, after: @after, around: new_around)
   end
 
   ##

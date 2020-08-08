@@ -9,7 +9,6 @@ module PropCheck
   ##
   # Run properties
   class Property
-
     ##
     # Main entry-point to create (and possibly immediately run) a property-test.
     #
@@ -36,7 +35,6 @@ module PropCheck
     # of this class on before finally passing a block to it using `#check`.
     # (so `forall(Generators.integer) do |val| ... end` and forall(Generators.integer).check do |val| ... end` are the same)
     def self.forall(*bindings, **kwbindings, &block)
-
       property = new(*bindings, **kwbindings)
 
       return property.check(&block) if block_given?
@@ -62,7 +60,6 @@ module PropCheck
     end
 
     def initialize(*bindings, **kwbindings)
-      # @condition = proc { true }
       @config = self.class.configuration
       @hooks = PropCheck::Hooks.new
 
@@ -98,7 +95,6 @@ module PropCheck
     # you can immediately pass a block to this method.
     # (so `forall(a: Generators.integer).with_config(verbose: true) do ... end` is the same as `forall(a: Generators.integer).with_config(verbose: true).check do ... end`)
     def with_config(**config, &block)
-      # new_config = @config.merge(config)
       duplicate = self.dup
       duplicate.instance_variable_set(:@config, @config.merge(config))
       duplicate.freeze
@@ -113,7 +109,6 @@ module PropCheck
 
       duplicate = self.dup
       duplicate.instance_variable_set(:@gen, gen_from_bindings(bindings, kwbindings))
-      # @gen = gen_from_bindings(bindings, kwbindings)
       duplicate.freeze
       duplicate
     end
@@ -127,12 +122,6 @@ module PropCheck
     # you might encounter a GeneratorExhaustedError.
     # Only filter if you have few inputs to reject. Otherwise, improve your generators.
     def where(&condition)
-      # original_condition = @condition.dup
-      # @condition = proc do |val|
-      #   call_splatted(val, &original_condition) && call_splatted(val, &condition)
-      #   # original_condition.call(val) && condition.call(val)
-      # end
-      # @gen = @gen.where(&condition)
       duplicate = self.dup
       duplicate.instance_variable_set(:@gen, @gen.where(&condition))
       duplicate.freeze
@@ -147,9 +136,7 @@ module PropCheck
     # When called multiple times, earlier-added hooks will be called _before_ `hook` is called.
     def before(&hook)
       duplicate = self.dup
-      duplicate.instance_variable_set(:@hooks, @hooks.dup.add_before(&hook))
-      # @hooks.add_before(&hook)
-      # self
+      duplicate.instance_variable_set(:@hooks, @hooks.add_before(&hook))
       duplicate.freeze
       duplicate
     end
@@ -160,11 +147,8 @@ module PropCheck
     # This is useful to add teardown logic
     # When called multiple times, earlier-added hooks will be called _after_ `hook` is called.
     def after(&hook)
-      # @hooks.add_after(&hook)
-      # self
-
       duplicate = self.dup
-      duplicate.instance_variable_set(:@hooks, @hooks.dup.add_after(&hook))
+      duplicate.instance_variable_set(:@hooks, @hooks.add_after(&hook))
       duplicate.freeze
       duplicate
     end
@@ -183,10 +167,8 @@ module PropCheck
     # it is possible for the code after `yield` not to be called.
     # So make sure that cleanup logic is wrapped with the `ensure` keyword.
     def around(&hook)
-      # @hooks.add_around(&hook)
-      # self
       duplicate = self.dup
-      duplicate.instance_variable_set(:@hooks, @hooks.dup.add_around(&hook))
+      duplicate.instance_variable_set(:@hooks, @hooks.add_around(&hook))
       duplicate.freeze
       duplicate
     end
