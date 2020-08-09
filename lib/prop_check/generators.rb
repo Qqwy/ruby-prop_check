@@ -257,21 +257,23 @@ module PropCheck
     def array(element_generator, min: 0, max: nil, empty: true)
       min = 1 if min.zero? && !empty
 
-      res = proc do |count|
-        count = min + 1 if count < min
-        count += 1 if count == min && min != 0
-        generators = (min...count).map do
-          element_generator.clone
-        end
-
-        tuple(*generators)
-      end
-
       if max.nil?
-        nonnegative_integer.bind(&res)
+        nonnegative_integer.bind { |count| make_array(element_generator, min, count) }
       else
-        res.call(max)
+        make_array(element_generator, min, max)
       end
+    end
+
+    private def make_array(element_generator, min, count)
+      amount = min if count < min
+      amount = min if count == min && min != 0
+      amount ||= (count - min)
+
+      generators = amount.times.map do
+        element_generator.clone
+      end
+
+      tuple(*generators)
     end
 
     ##
