@@ -1,3 +1,4 @@
+- 0.14.0 - Adds `uniq: true` option to `Generators.array`. Makes `PropCheck::Property` an immutable object that returns copies that have changes whenever reconfiguring, allowing re-usable configuration.
 - 0.13.0 - Adds Generator#resize
 - 0.12.1 - Fixes shrinking when filtering bug.
 - 0.12.0 - `PropCheck::Generators#instance`

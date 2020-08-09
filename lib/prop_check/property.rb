@@ -17,7 +17,7 @@ module PropCheck
     # as respective arguments:
     #
     # ```
-    # include PropCheck::Generators
+    # extend PropCheck::Generators
     # PropCheck.forall(integer(), float()) { |x, y| ... }
     # ```
     #
@@ -25,7 +25,7 @@ module PropCheck
     # of generators instead:
     #
     # ```
-    # include PropCheck::Generators
+    # extend PropCheck::Generators
     # PropCheck.forall(x: integer(), y: float()) { |x:, y:| ... }
     # ```
     #

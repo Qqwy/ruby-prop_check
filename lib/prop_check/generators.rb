@@ -11,6 +11,7 @@ module PropCheck
   module Generators
     extend self
 
+
     ##
     # Always returns the same value, regardless of `size` or `rng` (random number generator state)
     #
@@ -146,7 +147,7 @@ module PropCheck
       end
     end
 
-    @special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, Float::MIN, 0.0.next_float, 0.0.prev_float]
+    @@special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, Float::MIN, 0.0.next_float, 0.0.prev_float]
     ##
     # Generates floating-point numbers
     # Will generate NaN, Infinity, -Infinity,
@@ -159,7 +160,7 @@ module PropCheck
     #    >> Generators.float().sample(10, size: 10, rng: Random.new(42))
     #    => [4.0, 9.555555555555555, 0.0, -Float::INFINITY, 5.5, -5.818181818181818, 1.1428571428571428, 0.0, 8.0, 7.857142857142858]
     def float
-      frequency(99 => real_float, 1 => one_of(*@special_floats.map(&method(:constant))))
+      frequency(99 => real_float, 1 => one_of(*@@special_floats.map(&method(:constant))))
     end
 
     ##
@@ -349,7 +350,7 @@ module PropCheck
         .map(&:to_h)
     end
 
-    @alphanumeric_chars = [('a'..'z'), ('A'..'Z'), ('0'..'9')].flat_map(&:to_a).freeze
+    @@alphanumeric_chars = [('a'..'z'), ('A'..'Z'), ('0'..'9')].flat_map(&:to_a).freeze
     ##
     # Generates a single-character string
     # containing one of a..z, A..Z, 0..9
@@ -359,7 +360,7 @@ module PropCheck
     #    >> Generators.alphanumeric_char.sample(5, size: 10, rng: Random.new(42))
     #    => ["M", "Z", "C", "o", "Q"]
     def alphanumeric_char
-      one_of(*@alphanumeric_chars.map(&method(:constant)))
+      one_of(*@@alphanumeric_chars.map(&method(:constant)))
     end
 
     ##
@@ -376,7 +377,7 @@ module PropCheck
       array(alphanumeric_char, **kwargs).map(&:join)
     end
 
-    @printable_ascii_chars = (' '..'~').to_a.freeze
+    @@printable_ascii_chars = (' '..'~').to_a.freeze
 
     ##
     # Generates a single-character string
@@ -387,7 +388,7 @@ module PropCheck
     #   >> Generators.printable_ascii_char.sample(size: 10, rng: Random.new(42))
     #   => ["S", "|", ".", "g", "\\", "4", "r", "v", "j", "j"]
     def printable_ascii_char
-      one_of(*@printable_ascii_chars.map(&method(:constant)))
+      one_of(*@@printable_ascii_chars.map(&method(:constant)))
     end
 
     ##
@@ -404,8 +405,8 @@ module PropCheck
       array(printable_ascii_char, **kwargs).map(&:join)
     end
 
-    @ascii_chars = [
-      @printable_ascii_chars,
+    @@ascii_chars = [
+      @@printable_ascii_chars,
       [
         "\n",
         "\r",
@@ -428,7 +429,7 @@ module PropCheck
     #    >> Generators.ascii_char.sample(size: 10, rng: Random.new(42))
     #    => ["d", "S", "|", ".", "g", "\\", "4", "d", "r", "v"]
     def ascii_char
-      one_of(*@ascii_chars.map(&method(:constant)))
+      one_of(*@@ascii_chars.map(&method(:constant)))
     end
 
     ##
@@ -445,8 +446,8 @@ module PropCheck
       array(ascii_char, **kwargs).map(&:join)
     end
 
-    @printable_chars = [
-      @ascii_chars,
+    @@printable_chars = [
+      @@ascii_chars,
       "\u{A0}".."\u{D7FF}",
       "\u{E000}".."\u{FFFD}",
       "\u{10000}".."\u{10FFFF}"
@@ -461,7 +462,7 @@ module PropCheck
     #    >> Generators.printable_char.sample(size: 10, rng: Random.new(42))
     #    => ["吏", "", "", "", "", "", "", "", "", "Ȍ"]
     def printable_char
-      one_of(*@printable_chars.map(&method(:constant)))
+      one_of(*@@printable_chars.map(&method(:constant)))
     end
 
     ##
