@@ -9,16 +9,47 @@ PropCheck allows you to do Property Testing in Ruby.
 
 It features:
 
-- Generators for common datatypes.
-- An easy DSL to define your own generators (by combining existing ones, or completely custom).
+- Generators for most common Ruby datatypes.
+- An easy DSL to define your own generators (by combining existing ones, as well as completely custom ones).
 - Shrinking to a minimal counter-example on failure.
+- Hooks to perform extra set-up/cleanup logic before/after every example case.
+
+## What is PropCheck?
+
+PropCheck is a Ruby library to create unit tests which are simpler to write and more powerful when run, finding edge-cases in your code you wouldn't have thought to look for.
+
+It works by letting you write tests that assert that something should be true for _every_ case, rather than just the ones you happen to think of.
 
 
-## TODOs before stable release
+A normal unit test looks something like the following:
 
-Before releasing this gem on Rubygems, the following things need to be finished:
+1. Set up some data.
+2. Perform some operations on the data.
+3. Assert something about the result
 
-- [x]  Finalize the testing DSL.
+PropCheck lets you write tests which instead look like this:
+
+1. For all data matching some specification.
+2. Perform some operations on the data.
+3. Assert something about the result.
+
+This is often called property-based testing. It was popularised by the Haskell library [QuickCheck](https://hackage.haskell.org/package/QuickCheck). 
+PropCheck takes further inspiration from Erlang's [PropEr](https://hex.pm/packages/proper), Elixir's [StreamData](https://hex.pm/packages/stream_data) and Python's [Hypothesis](https://hypothesis.works/).
+
+It works by generating arbitrary data matching your specification and checking that your assertions still hold in that case. If it finds an example where they do not, it takes that example and shrinks it down, simplifying it to find the smallest example that still causes the problem.
+
+Writing these kinds of tests usually consists of deciding on guarantees that your code should have -- properties that should always hold true, regardless of wat the world throws at you. Some examples are:
+
+- Your code should not throw an exception, or only a particular type of exception.
+- If you remove an object, you can no longer see it
+- If you serialize and then deserializea value, you get the same value back.
+
+
+## Implemented and still missing features
+
+Before releasing v1.0, we want to finish the following:
+
+- [x] Finalize the testing DSL.
 - [x] Testing the library itself (against known 'true' axiomatically correct Ruby code.)
 - [x] Customization of common settings
  - [x] Filtering generators. 
@@ -28,18 +59,17 @@ Before releasing this gem on Rubygems, the following things need to be finished:
 - [x] Good, unicode-compliant, string generators.
 - [x] Filtering generator outputs.
 - [x] Before/after/around hooks to add setup/teardown logic to be called before/after/around each time a check is run with new data.
+- [x] Possibility to resize generators.
 - [x] `#instance` generator to allow the easy creation of generators for custom datatypes.
 - [ ] A usage guide.
 - [ ] A simple way to create recursive generators
 - [ ] Builtin generation of `Set`s
 - [ ] Builtin generation of `Date`s, `Time`s and `DateTime`s.
+- [ ] Configuration option to resize all generators given to a particular Property instance.
 
-# Nice-to-haves
+## Nice-to-haves
  
-- [x] Basic integration with RSpec. See also https://groups.google.com/forum/#!msg/rspec/U-LmL0OnO-Y/iW_Jcd6JBAAJ for progress on this.
- - [ ] `aggregate` , `resize` and similar generator-modifying calls (c.f. PropEr's variants of these) which will help with introspection/metrics.
- - [ ] Integration with other Ruby test frameworks.
- - Stateful property testing. If implemented at some point, will probably happen in a separate add-on library.
+- Stateful property testing. If implemented at some point, will probably happen in a separate add-on library.
 
 
 ## Installation
@@ -64,10 +94,8 @@ Or install it yourself as:
 ### Using PropCheck for basic testing
 
 Propcheck exposes the `forall` method.
-It takes generators as keyword arguments and a block to run.
-Inside the block, each of the names in the keyword-argument-list is available by its name.
-
-_(to be precise: a method on the execution context is defined which returns the current generated value for that name)_
+It takes any number of generators as arguments (or keyword arguments), as well as a block to run.
+The value(s) generated from the generator(s) passed to the `forall` will be given to the block as arguments.
 
 Raise an exception from the block if there is a problem. If there is no problem, just return normally.
 
