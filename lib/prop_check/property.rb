@@ -1,5 +1,5 @@
 require 'stringio'
-require "awesome_print"
+require 'amazing_print'
 
 require 'prop_check/property/configuration'
 require 'prop_check/property/output_formatter'
