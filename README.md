@@ -30,6 +30,9 @@ Before releasing this gem on Rubygems, the following things need to be finished:
 - [x] Before/after/around hooks to add setup/teardown logic to be called before/after/around each time a check is run with new data.
 - [x] `#instance` generator to allow the easy creation of generators for custom datatypes.
 - [ ] A usage guide.
+- [ ] A simple way to create recursive generators
+- [ ] Builtin generation of `Set`s
+- [ ] Builtin generation of `Date`s, `Time`s and `DateTime`s.
 
 # Nice-to-haves
  
