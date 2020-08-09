@@ -264,8 +264,6 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
     end
 
     private def attempts_enum(binding_generator)
-      ap @hooks
-
         @hooks
         .wrap_enum(raw_attempts_enum(binding_generator))
         .lazy
