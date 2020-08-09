@@ -288,3 +288,10 @@ Everyone interacting in the PropCheck project’s codebases, issue trackers, cha
 I want to thank the original creators of QuickCheck (Koen Claessen, John Hughes) as well as the authors of many great property testing libraries that I was/am able to use as inspiration.
 I also want to greatly thank Thomasz Kowal who made me excited about property based testing [with his great talk about stateful property testing](https://www.youtube.com/watch?v=q0wZzFUYCuM), 
 as well as Fred Herbert for his great book [Property-Based Testing with PropEr, Erlang and Elixir](https://propertesting.com/) which is really worth the read (regardless of what language you are using).
+
+The implementation and API of PropCheck takes a lot of inspiration from the following pre-existing libraries:
+
+- Haskell's [QuickCheck](https://hackage.haskell.org/package/QuickCheck) and [Hedgehog](https://hackage.haskell.org/package/hedgehog);
+- Erlang's [PropEr](https://hex.pm/packages/proper);
+- Elixir's [StreamData](https://hex.pm/packages/stream_data);
+- Python's [Hypothesis](https://hypothesis.works/).
