@@ -7,7 +7,14 @@ require 'prop_check/property/shrinker'
 require 'prop_check/hooks'
 module PropCheck
   ##
-  # Run properties
+  # Create and run property-checks.
+  #
+  # For simple usage, see `.forall`.
+  #
+  # For advanced usage, call `PropCheck::Property.new(...)` and then configure it to your liking
+  # using e.g. `#with_config`, `#before`, `#after`, `#around` etc.
+  # Each of these methods will return a new `Property`, so earlier properties are not mutated.
+  # This allows you to re-use configuration and hooks between multiple tests.
   class Property
     ##
     # Main entry-point to create (and possibly immediately run) a property-test.
@@ -122,6 +129,8 @@ module PropCheck
     # you might encounter a GeneratorExhaustedError.
     # Only filter if you have few inputs to reject. Otherwise, improve your generators.
     def where(&condition)
+      raise ArgumentError, 'No generator bindings specified! #where should be called after `#forall` or `#with_bindings`.' unless @gen
+
       duplicate = self.dup
       duplicate.instance_variable_set(:@gen, @gen.where(&condition))
       duplicate.freeze
