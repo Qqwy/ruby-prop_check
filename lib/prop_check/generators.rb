@@ -241,6 +241,12 @@ module PropCheck
     # `empty:` When false, behaves the same as `min: 1`
     # `min:` Ensures at least this many elements are generated. (default: 0)
     # `max:` Ensures at most this many elements are generated. When nil, an arbitrary count is used instead. (default: nil)
+    # `uniq:` When `true`, ensures that all elements in the array are unique.
+    #         When given a proc, uses the result of this proc to check for uniqueness.
+    #         (matching the behaviour of `Array#uniq`)
+    #         If it is not possible to generate another unique value after the configured `max_consecutive_attempts`
+    #         an `PropCheck::Errors::GeneratorExhaustedError` will be raised.
+    #         (default: `false`)
     #
     #
     #    >> Generators.array(Generators.positive_integer).sample(5, size: 1, rng: Random.new(42))
@@ -252,28 +258,69 @@ module PropCheck
     #    =>  [[], [2], [], [], [2]]
     #    >> Generators.array(Generators.positive_integer, empty: false).sample(5, size: 1, rng: Random.new(1))
     #    =>  [[2], [1], [2], [1], [1]]
+    #
+    #    >> Generators.array(Generators.boolean, uniq: true).sample(5, rng: Random.new(1))
+    #    => [[true, false], [false, true], [true, false], [false, true], [false, true]]
 
-
-    def array(element_generator, min: 0, max: nil, empty: true)
+    def array(element_generator, min: 0, max: nil, empty: true, uniq: false)
       min = 1 if min.zero? && !empty
+      uniq = proc { |x| x } if uniq == true
 
       if max.nil?
-        nonnegative_integer.bind { |count| make_array(element_generator, min, count) }
+        nonnegative_integer.bind { |count| make_array(element_generator, min, count, uniq) }
       else
-        make_array(element_generator, min, max)
+        make_array(element_generator, min, max, uniq)
       end
     end
 
-    private def make_array(element_generator, min, count)
+    private def make_array(element_generator, min, count, uniq)
       amount = min if count < min
       amount = min if count == min && min != 0
       amount ||= (count - min)
 
+      # Simple, optimized implementation:
+      return make_array_simple(element_generator, amount) unless uniq
+
+      # More complex implementation that filters duplicates
+      make_array_uniq(element_generator, min, amount, uniq)
+    end
+
+    private def make_array_simple(element_generator, amount)
       generators = amount.times.map do
         element_generator.clone
       end
 
       tuple(*generators)
+    end
+
+    private def make_array_uniq(element_generator, min, amount, uniq_fun)
+      Generator.new do |**kwargs|
+        arr = []
+        uniques = Set.new
+        count = 0
+        (0..).lazy.map do
+          elem = element_generator.clone.generate(**kwargs)
+          if uniques.add?(uniq_fun.call(elem.root))
+            arr.push(elem)
+            count = 0
+          else
+            count += 1
+          end
+
+          if count > kwargs[:max_consecutive_attempts]
+            if arr.size >= min
+              # Give up and return shorter array in this case
+              amount = min
+            else
+              raise Errors::GeneratorExhaustedError, "Too many consecutive elements filtered by 'uniq:'."
+            end
+          end
+        end
+        .take_while { arr.size < amount }
+        .force
+
+        LazyTree.zip(arr).map { |array| array.uniq(&uniq_fun) }
+      end
     end
 
     ##
