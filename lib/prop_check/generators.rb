@@ -370,6 +370,8 @@ module PropCheck
     #
     #    >> Generators.alphanumeric_string.sample(5, size: 10, rng: Random.new(42))
     #    => ["ZCoQ", "8uM", "wkkx0JNx", "v0bxRDLb", "Gl5v8RyWA6"]
+    #
+    # Accepts the same options as `array`
     def alphanumeric_string(**kwargs)
       array(alphanumeric_char, **kwargs).map(&:join)
     end
@@ -396,6 +398,8 @@ module PropCheck
     #
     #    >> Generators.printable_ascii_string.sample(5, size: 10, rng: Random.new(42))
     #    => ["S|.g", "rvjjw7\"5T!", "=", "!_[4@", "Y"]
+    #
+    # Accepts the same options as `array`
     def printable_ascii_string(**kwargs)
       array(printable_ascii_char, **kwargs).map(&:join)
     end
@@ -435,6 +439,8 @@ module PropCheck
     #
     #    >> Generators.ascii_string.sample(5, size: 10, rng: Random.new(42))
     #    => ["S|.g", "drvjjw\b\a7\"", "!w=E!_[4@k", "x", "zZI{[o"]
+    #
+    # Accepts the same options as `array`
     def ascii_string(**kwargs)
       array(ascii_char, **kwargs).map(&:join)
     end
@@ -466,6 +472,8 @@ module PropCheck
     #
     #    >> Generators.printable_string.sample(5, size: 10, rng: Random.new(42))
     #    => ["", "Ȍ", "𐁂", "Ȕ", ""]
+    #
+    # Accepts the same options as `array`
     def printable_string(**kwargs)
       array(printable_char, **kwargs).map(&:join)
     end
@@ -492,6 +500,8 @@ module PropCheck
     #
     #    >> Generators.string.sample(5, size: 10, rng: Random.new(42))
     #    => ["\u{A3DB3}𠍜\u{3F46A}\u{1AEBC}", "􍙦𡡹󴇒\u{DED74}𪱣\u{43E97}ꂂ\u{50695}􏴴\u{C0301}", "\u{4FD9D}", "\u{C14BF}\u{193BB}𭇋󱣼\u{76B58}", "𦐺\u{9FDDB}\u{80ABB}\u{9E3CF}𐂽\u{14AAE}"]
+    #
+    # Accepts the same options as `array`
     def string(**kwargs)
       array(char, **kwargs).map(&:join)
     end
