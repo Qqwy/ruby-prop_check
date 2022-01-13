@@ -249,5 +249,14 @@ RSpec.describe PropCheck do
       end
     end
 
+    describe 'generating a hash' do
+      include PropCheck::Generators
+
+      it 'does not fail wenn calling call_splatted' do
+        PropCheck.forall(hash_of(string, integer)) do |h|
+          expect(h).to be_a(Hash)
+        end
+      end
+    end
   end
 end
