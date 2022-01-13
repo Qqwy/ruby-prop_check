@@ -594,7 +594,7 @@ module PropCheck
     # DateTimes start around the year 2022 and deviate more when `size` increases.
     #
     #   >> Generators.date_times.sample(2, rng: Random.new(42))
-    #   => [#<DateTime: 2018-04-29T14:42:07+00:00 ((2458238j,52927s,0n),+0s,2299161j)>, #<DateTime: 2032-07-26T18:22:10+00:00 ((2463440j,66130s,0n),+0s,2299161j)>]
+    #   => [DateTime.new(2018, 4, 29, 14, 42, 7), DateTime.new(2032, 7, 26, 18, 22, 10)]
     def date_times
       date_time_vals.map { |values| DateTime.new(*values) }
     end
@@ -604,7 +604,7 @@ module PropCheck
     # Times start around the year 2022 and deviate more when `size` increases.
     #
     #   >> PropCheck::Generators.times.sample(2, rng: Random.new(42))
-    #   => [2018-04-29 14:42:07 +0200, 2032-07-26 18:22:10 +0200]
+    #   => [Time.new(2018, 4, 29, 14, 42, 7), Time.new(2032, 7, 26, 18, 22, 10)]
     def times
       date_time_vals.map { |values| Time.new(*values) }
     end
@@ -614,7 +614,7 @@ module PropCheck
     # Dates start around the year 2022 and deviate more when `size` increases.
     #
     #   >> Generators.dates.sample(2, rng: Random.new(42))
-    #   => [#<Date: 2018-04-29 ((2458238j,0s,0n),+0s,2299161j)>, #<Date: 2026-11-08 ((2461353j,0s,0n),+0s,2299161j)>]
+    #   => [Date.new(2018, 4, 29), Date.new(2026, 11, 8)]
     def dates
       date_vals.map { |values| Date.new(*values) }
     end
