@@ -298,7 +298,7 @@ module PropCheck
         arr = []
         uniques = Set.new
         count = 0
-        (0..).lazy.map do
+        0.step.each.lazy.map do
           elem = element_generator.clone.generate(**kwargs)
           if uniques.add?(uniq_fun.call(elem.root))
             arr.push(elem)
