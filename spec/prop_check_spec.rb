@@ -130,6 +130,7 @@ RSpec.describe PropCheck do
 
 
         it "generates an error with 'shrinking impossible' if the value cannot be shrunk further" do
+          srand(42)
           expect do
             PropCheck.forall(PropCheck::Generators.array(PropCheck::Generators.integer)) do |array|
               array.sum / array.length
