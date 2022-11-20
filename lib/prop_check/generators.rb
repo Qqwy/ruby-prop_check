@@ -380,7 +380,7 @@ module PropCheck
       if max.nil?
         nonnegative_integer.bind { |count| make_array(element_generator, min, count, uniq) }
       else
-        make_array(element_generator, min, max, uniq)
+        choose(min..max).bind { |count| make_array(element_generator, min, count, uniq) }
       end
     end
 
@@ -409,28 +409,33 @@ module PropCheck
         arr = []
         uniques = Set.new
         count = 0
-        0.step.lazy.map do
-          elem = element_generator.clone.generate(**kwargs)
-          if uniques.add?(uniq_fun.call(elem.root))
-            arr.push(elem)
-            count = 0
-          else
-            count += 1
-          end
 
-          if count > kwargs[:max_consecutive_attempts]
-            if arr.size >= min
-              # Give up and return shorter array in this case
-              amount = min
+        if amount == 0
+          LazyTree.new([])
+        else
+          0.step.lazy.map do
+            elem = element_generator.clone.generate(**kwargs)
+            if uniques.add?(uniq_fun.call(elem.root))
+              arr.push(elem)
+              count = 0
             else
-              raise Errors::GeneratorExhaustedError, "Too many consecutive elements filtered by 'uniq:'."
+              count += 1
+            end
+
+            if count > kwargs[:max_consecutive_attempts]
+              if arr.size >= min
+                # Give up and return shorter array in this case
+                amount = min
+              else
+                raise Errors::GeneratorExhaustedError, "Too many consecutive elements filtered by 'uniq:'."
+              end
             end
           end
-        end
-         .take_while { arr.size < amount }
-         .force
+           .take_while { arr.size < amount }
+           .force
 
-        LazyTree.zip(arr).map { |array| array.uniq(&uniq_fun) }
+          LazyTree.zip(arr).map { |array| array.uniq(&uniq_fun) }
+        end
       end
     end
 
@@ -448,6 +453,9 @@ module PropCheck
     # In the set, elements are always unique.
     # If it is not possible to generate another unique value after the configured `max_consecutive_attempts`
     # a `PropCheck::Errors::GeneratorExhaustedError` will be raised.
+    #
+    #    >> Generators.set(Generators.positive_integer).sample(5, size: 4, rng: Random.new(42))
+    #    => [Set[2, 4], Set[], Set[3, 4], Set[], Set[4]]
     def set(element_generator, min: 0, max: nil, empty: true)
       array(element_generator, min: min, max: max, empty: empty, uniq: true).map(&:to_set)
     end

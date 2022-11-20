@@ -12,6 +12,7 @@
     - Preserve backwards compatibility with Ruby 2.5 by not using infinite ranges internally (c.f. #8, thank you, @hlaf!)
     - Make a flaky test deterministic by fixing the RNG. (c.f. #9, thank you, @hlaf!)
     - Fix a crash when using a hash where not all keys are symbols. (c.f. #7, thank you, @Haniyya!)
+    - Fix situations in which `PropCheck::Generators.array` would for certain config values never generate empty arrays.
 - 0.14.1 - Swap `awesome_print` for `amazing_print` which is a fork of the former that is actively maintained.
 - 0.14.0 - Adds `uniq: true` option to `Generators.array`. Makes `PropCheck::Property` an immutable object that returns copies that have changes whenever reconfiguring, allowing re-usable configuration.
 - 0.13.0 - Adds Generator#resize
