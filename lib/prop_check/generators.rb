@@ -872,5 +872,75 @@ module PropCheck
         end
       end
     end
+
+    ##
+    # Helper to build recursive generators
+    #
+    # Given a `leaf_generator`
+    # and a block which:
+    #  - is given a generator that generates subtrees.
+    #  - it should return the generator for intermediate tree nodes.
+    #
+    # This is best explained with an example.
+    # Say we want to generate a binary tree of integers.
+    #
+    # If we have a struct representing internal nodes:
+    #  ```ruby
+    #  Branch = Struct.new(:left, :right, keyword_init: true)
+    #  ```
+    #  we can generate trees like so:
+    #  ```ruby
+    #  Generators.tree(Generators.integer) do |subtree_gen|
+    #    G.instance(Branch, left: subtree_gen, right: subtree_gen)
+    #  end
+    #  ```
+    #
+    # As another example, consider generating lists of integers:
+    #
+    #     >> G = PropCheck::Generators
+    #     >> G.tree(G.integer) {|child_gen| G.array(child_gen) }.sample(5, size: 37, rng: Random.new(42))
+    #     => [[7, [2, 3], -10], [[-2], [-2, [3]], [[2, 3]]], [], [0, [-2, -3]], [[1], -19, [], [1, -1], [1], [-1, -1], [1]]]
+    #
+    # And finally, here is how one could create a simple generator for parsed JSON data:
+    #
+    # ```ruby`
+    #  G = PropCheck::Generators
+    #  def json
+    #    G.tree(G.one_of(G.boolean, G.real_float, G.ascii_string)) do |json_gen|
+    #      G.one_of(G.array(json_gen), G.hash_of(G.ascii_string, json_gen))
+    #    end
+    #  end
+    # ```
+    #
+    def tree(leaf_generator, &block)
+      # Implementation is based on
+      # https://hexdocs.pm/stream_data/StreamData.html#tree/2
+      Generator.new do |size:, rng:, **other_kwargs|
+        nodes_on_each_level = random_pseudofactors(size.pow(1.1).to_i, rng)
+        result = nodes_on_each_level.reduce(leaf_generator) do |subtree_generator, nodes_on_this_level|
+          frequency(1 => subtree_generator,
+                    2 => block.call(subtree_generator).resize { |_size| nodes_on_this_level })
+        end
+
+        result.generate(size: size, rng: rng, **other_kwargs)
+      end
+    end
+
+    private def random_pseudofactors(size, rng)
+      return [size].to_enum if size < 2
+
+      Enumerator.new do |yielder|
+        loop do
+          factor = rng.rand(1..(Math.log2(size).to_i))
+          if factor == 1
+            yielder << size
+            break
+          else
+            yielder << factor
+            size /= factor
+          end
+        end
+      end
+    end
   end
 end
