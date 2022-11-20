@@ -1,3 +1,7 @@
+- 0.16.0
+  - Features:
+    - New option in `PropCheck::Property::Configuration` to resize all generators at once.
+    - Wrapper functions to modify this easily in `PropCheck::Property` called `#resize`, `#grow_fast`, `#grow_slowly`, `#grow_exponentially`, `#grow_quadratically`, `#grow_logarithmically`.
 - 0.15.0
   - Features:
     - Generators for `Date`, `Time` and `DateTime`.
