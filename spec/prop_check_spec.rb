@@ -254,8 +254,8 @@ RSpec.describe PropCheck do
     describe 'generating a hash' do
       include PropCheck::Generators
 
-      it 'does not fail wenn calling call_splatted' do
-        PropCheck.forall(hash_of(string, integer)) do |h|
+      it 'does not fail when calling call_splatted with non-symbol keys' do
+        PropCheck.forall(hash_of(integer, integer)) do |h|
           expect(h).to be_a(Hash)
         end
       end
