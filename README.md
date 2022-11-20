@@ -61,11 +61,11 @@ Before releasing v1.0, we want to finish the following:
 - [x] Before/after/around hooks to add setup/teardown logic to be called before/after/around each time a check is run with new data.
 - [x] Possibility to resize generators.
 - [x] `#instance` generator to allow the easy creation of generators for custom datatypes.
-- [ ] A usage guide.
-- [ ] A simple way to create recursive generators
 - [x] Builtin generation of `Set`s
 - [x] Builtin generation of `Date`s, `Time`s and `DateTime`s.
-- [ ] Configuration option to resize all generators given to a particular Property instance.
+- [x] Configuration option to resize all generators given to a particular Property instance.
+- [ ] A simple way to create recursive generators
+- [ ] A usage guide.
 
 ## Nice-to-haves
  
