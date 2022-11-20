@@ -1,6 +1,7 @@
 # coding: utf-8
 # frozen_string_literal: true
 
+require 'date'
 require 'prop_check/generator'
 require 'prop_check/lazy_tree'
 module PropCheck
@@ -586,6 +587,49 @@ module PropCheck
     #    => [9, 10, 8, 0, 10, -3, -8, 10, 1, -9, -10, nil, 1, 6, nil, 1, 9, -8, 8, 10]
     def nillable(other_generator)
       frequency(9 => other_generator, 1 => constant(nil))
+    end
+
+    ##
+    # Generates DateTimes.
+    # DateTimes start around the year 2022 and deviate more when `size` increases.
+    #
+    #   >> Generators.date_times.sample(2, rng: Random.new(42))
+    #   => [DateTime.new(2018, 4, 29, 14, 42, 7), DateTime.new(2032, 7, 26, 18, 22, 10)]
+    def date_times
+      date_time_vals.map { |values| DateTime.new(*values) }
+    end
+
+    ##
+    # Generates Times.
+    # Times start around the year 2022 and deviate more when `size` increases.
+    #
+    #   >> PropCheck::Generators.times.sample(2, rng: Random.new(42))
+    #   => [Time.new(2018, 4, 29, 14, 42, 7), Time.new(2032, 7, 26, 18, 22, 10)]
+    def times
+      date_time_vals.map { |values| Time.new(*values) }
+    end
+
+    ##
+    # Generates Dates.
+    # Dates start around the year 2022 and deviate more when `size` increases.
+    #
+    #   >> Generators.dates.sample(2, rng: Random.new(42))
+    #   => [Date.new(2018, 4, 29), Date.new(2026, 11, 8)]
+    def dates
+      date_vals.map { |values| Date.new(*values) }
+    end
+
+    private def date_vals
+      tuple(
+        integer.map { |i| i + 2022 },
+        choose(1..12),
+        choose(1..31)
+      ).where { |date_tuple| Date.valid_date?(*date_tuple) }
+    end
+
+    private def date_time_vals
+      time_vals = tuple(choose(0..23), choose(0..59), choose(0..59))
+      tuple(date_vals, time_vals).map { |date, time| date + time }
     end
 
     ##
