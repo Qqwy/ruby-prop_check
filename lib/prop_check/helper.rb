@@ -33,12 +33,9 @@ module PropCheck
     end
 
     def call_splatted(val, &block)
-      case val
-      when Hash
-        block.call(**val)
-      else
-        block.call(val)
-      end
+      return block.call(**val) if val.is_a?(Hash) && val.keys.all? { |k| k.is_a?(Symbol) }
+
+      block.call(val)
       # if kwval != {}
       #   block.call(**kwval)
       # else
