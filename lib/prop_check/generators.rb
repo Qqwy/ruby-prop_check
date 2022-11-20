@@ -758,7 +758,6 @@ module PropCheck
         offset_gen.map { |offset| Date.jd(epoch.jd + offset) }
       else
         offset_gen.with_config.map do |offset, config|
-          puts config.inspect
           epoch = config.default_epoch.to_date
           Date.jd(epoch.jd + offset)
         end
