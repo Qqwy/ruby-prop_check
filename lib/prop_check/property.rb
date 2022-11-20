@@ -111,6 +111,67 @@ module PropCheck
       duplicate
     end
 
+    ##
+    # Resizes all generators in this property with the given function.
+    #
+    # Shorthand for manually wrapping `PropCheck::Property::Configuration.resize_function` with the new function.
+    def resize(&block)
+      raise '#resize called without a block' unless block_given?
+
+      orig_fun = @config.resize_function
+      with_config(resize_function: block)
+    end
+
+    ##
+    # Resizes all generators in this property. The new size is `2.pow(orig_size)`
+    #
+    # c.f. #resize
+    def growing_exponentially(&block)
+      orig_fun = @config.resize_function
+      fun = proc { |size| 2.pow(orig_fun.call(size)) }
+      with_config(resize_function: fun, &block)
+    end
+
+    ##
+    # Resizes all generators in this property. The new size is `orig_size * orig_size`
+    #
+    # c.f. #resize
+    def growing_quadratically(&block)
+      orig_fun = @config.resize_function
+      fun = proc { |size| orig_fun.call(size).pow(2) }
+      with_config(resize_function: fun, &block)
+    end
+
+    ##
+    # Resizes all generators in this property. The new size is `2 * orig_size`
+    #
+    # c.f. #resize
+    def growing_fast(&block)
+      orig_fun = @config.resize_function
+      fun = proc { |size| orig_fun.call(size) * 2 }
+      with_config(resize_function: fun, &block)
+    end
+
+    ##
+    # Resizes all generators in this property. The new size is `0.5 * orig_size`
+    #
+    # c.f. #resize
+    def growing_slowly(&block)
+      orig_fun = @config.resize_function
+      fun = proc { |size| orig_fun.call(size) * 0.5 }
+      with_config(resize_function: fun, &block)
+    end
+
+    ##
+    # Resizes all generators in this property. The new size is `Math.log2(orig_size)`
+    #
+    # c.f. #resize
+    def growing_logarithmically(&block)
+      orig_fun = @config.resize_function
+      fun = proc { |size| Math.log2(orig_fun.call(size)) }
+      with_config(resize_function: fun, &block)
+    end
+
     def with_bindings(*bindings, **kwbindings)
       raise ArgumentError, 'No bindings specified!' if bindings.empty? && kwbindings.empty?
 
@@ -279,8 +340,9 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
       (0...@config.max_generate_attempts)
         .lazy
         .map do
+        generator_size = @config.resize_function.call(size).to_i
         binding_generator.generate(
-          size: size,
+          size: generator_size,
           rng: rng,
           max_consecutive_attempts: @config.max_consecutive_attempts,
           config: @config

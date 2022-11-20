@@ -61,11 +61,11 @@ Before releasing v1.0, we want to finish the following:
 - [x] Before/after/around hooks to add setup/teardown logic to be called before/after/around each time a check is run with new data.
 - [x] Possibility to resize generators.
 - [x] `#instance` generator to allow the easy creation of generators for custom datatypes.
-- [ ] A usage guide.
-- [ ] A simple way to create recursive generators
 - [x] Builtin generation of `Set`s
 - [x] Builtin generation of `Date`s, `Time`s and `DateTime`s.
-- [ ] Configuration option to resize all generators given to a particular Property instance.
+- [x] Configuration option to resize all generators given to a particular Property instance.
+- [ ] A simple way to create recursive generators
+- [ ] A usage guide.
 
 ## Nice-to-haves
  
@@ -100,9 +100,9 @@ The value(s) generated from the generator(s) passed to the `forall` will be give
 Raise an exception from the block if there is a problem. If there is no problem, just return normally.
 
 ```ruby
-include PropCheck::Generators
+G = PropCheck::Generators
 # testing that Enumerable#sort sorts in ascending order
-PropCheck.forall(array(integer)) do |numbers|
+PropCheck.forall(G.array(G.integer)) do |numbers|
   sorted_numbers = numbers.sort
   
   # Check that no number is smaller than the previous number
@@ -124,8 +124,8 @@ end
 ```
 ```ruby
 # And then in a test case:
-include PropCheck::Generators
-PropCheck.forall(numbers: array(integer)) do |numbers:|
+G = PropCheck::Generators
+PropCheck.forall(numbers: G.array(G.integer)) do |numbers:|
   result = naive_average(numbers)
   unless result.is_a?(Integer) do
     raise "Expected the average to be an integer!"
@@ -135,10 +135,10 @@ end
 # Or if you e.g. are using RSpec:
 describe "#naive_average" do
   include PropCheck
-  include PropCheck::Generators
+  G = PropCheck::Generators
 
   it "returns an integer for any input" do
-    forall(numbers: array(integer)) do |numbers:|
+    forall(numbers: G.array(G.integer)) do |numbers:|
       result = naive_average(numbers)      
       expect(result).to be_a(Integer)
     end
@@ -208,11 +208,12 @@ It contains generators for:
 - (any, only real-valued) floats, 
 - (any, printable only, alphanumeric only, etc) strings and symbols
 - fixed-size arrays and hashes 
-- as well as varying-size arrays and hashes.
+- as well as varying-size arrays, hashes and sets.
+- dates, times, datetimes.
 - and many more!
 
-It is common to call `include PropCheck::Generators` in e.g. your testing-suite files to be able to use these.
-If you want to be more explicit (but somewhat more verbose) when calling these functions. feel free to e.g. create a module-alias (like `PG = PropCheck::Generators`) instead.
+It is common and recommended to set up a module alias by using `G = PropCheck::Generators` in e.g. your testing-suite files to be able to refer to all of them.
+_(Earlier versions of the library recommended including the module instead. But this will make it very simple to accidentally shadow a generator with a local variable named `float` or `array` and similar.)_
 
 ### Writing Custom Generators
 
@@ -228,33 +229,37 @@ Always returns the given value. No shrinking.
 
 Allows you to take the result of one generator and transform it into something else.
     
-    >> Generators.choose(32..128).map(&:chr).call(10, Random.new(42))
-    => "S"
+    >> G.choose(32..128).map(&:chr).sample(1, size: 10, Random.new(42))
+    => ["S"]
 
 #### Generator#bind
 
 Allows you to create one or another generator conditionally on the output of another generator.
 
-    >> Generators.integer.bind { |a| Generators.integer.bind { |b| Generator.wrap([a , b]) } }.call(100, Random.new(42))
-    => [2, 79]
+    >> G.integer.bind { |a| G.integer.bind { |b| G.constant([a , b]) } }.sample(1, size: 100, rng: Random.new(42)
+    => [[2, 79]]
 
+This is an advanced feature. Often, you can use a combination of `Generators.tuple` and `Generator#map` instead:
+
+    >> G.tuple(integer, integer).sample(1, size: 100, rng: Random.new(42)
+    => [[2, 79]]
 
 #### Generators.one_of
 
 Useful if you want to be able to generate a value to be one of multiple possibilities:
 
     
-    >> Generators.one_of(Generators.constant(true), Generators.constant(false)).sample(5, size: 10, rng: Random.new(42))
+    >> G.one_of(G.constant(true), G.constant(false)).sample(5, size: 10, rng: Random.new(42))
     => [true, false, true, true, true]
 
-(note that for this example, you can also use `Generators.boolean`. The example happens to show how it is implemented under the hood.)
+(Note that for this example, you can also use `G.boolean`. The example happens to show how it is implemented under the hood.)
 
 #### Generators.frequency
 
 If `one_of` does not give you enough flexibility because you want some results to be more common than others,
 you can use `Generators.frequency` which takes a hash of (integer_frequency => generator) keypairs.
 
-    >> Generators.frequency(5 => Generators.integer, 1 => Generators.printable_ascii_char).sample(size: 10, rng: Random.new(42))
+    >> G.frequency(5 => G.integer, 1 => G.printable_ascii_char).sample(size: 10, rng: Random.new(42))
     => [4, -3, 10, 8, 0, -7, 10, 1, "E", 10]
 
 #### Others
