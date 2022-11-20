@@ -1,3 +1,6 @@
+- 0.17.0
+  - Features:
+    - Recursive generation using `PropCheck::Generators.tree`.
 - 0.16.0
   - Features:
     - New option in `PropCheck::Property::Configuration` to resize all generators at once.
