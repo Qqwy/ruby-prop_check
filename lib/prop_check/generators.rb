@@ -1,4 +1,3 @@
-# coding: utf-8
 # frozen_string_literal: true
 
 require 'date'
@@ -147,7 +146,8 @@ module PropCheck
       end
     end
 
-    @@special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, Float::MIN, 0.0.next_float, 0.0.prev_float]
+    @@special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, Float::MIN, 0.0.next_float,
+                        0.0.prev_float]
     ##
     # Generates floating-point numbers
     # Will generate NaN, Infinity, -Infinity,
@@ -317,8 +317,8 @@ module PropCheck
             end
           end
         end
-        .take_while { arr.size < amount }
-        .force
+         .take_while { arr.size < amount }
+         .force
 
         LazyTree.zip(arr).map { |array| array.uniq(&uniq_fun) }
       end
@@ -575,8 +575,7 @@ module PropCheck
              array(string),
              hash(simple_symbol, integer),
              hash(string, integer),
-             hash(string, string)
-            )
+             hash(string, string))
     end
 
     ##
@@ -593,9 +592,9 @@ module PropCheck
     # Generates DateTimes.
     # DateTimes start around the year 2022 and deviate more when `size` increases.
     #
-    #   >> Generators.date_times.sample(2, rng: Random.new(42))
+    #   >> Generators.date_time.sample(2, rng: Random.new(42))
     #   => [DateTime.new(2018, 4, 29, 14, 42, 7), DateTime.new(2032, 7, 26, 18, 22, 10)]
-    def date_times
+    def date_time
       date_time_vals.map { |values| DateTime.new(*values) }
     end
 
@@ -603,9 +602,9 @@ module PropCheck
     # Generates Times.
     # Times start around the year 2022 and deviate more when `size` increases.
     #
-    #   >> PropCheck::Generators.times.sample(2, rng: Random.new(42))
+    #   >> PropCheck::Generators.time.sample(2, rng: Random.new(42))
     #   => [Time.new(2018, 4, 29, 14, 42, 7), Time.new(2032, 7, 26, 18, 22, 10)]
-    def times
+    def time
       date_time_vals.map { |values| Time.new(*values) }
     end
 
@@ -613,9 +612,9 @@ module PropCheck
     # Generates Dates.
     # Dates start around the year 2022 and deviate more when `size` increases.
     #
-    #   >> Generators.dates.sample(2, rng: Random.new(42))
+    #   >> Generators.date.sample(2, rng: Random.new(42))
     #   => [Date.new(2018, 4, 29), Date.new(2026, 11, 8)]
-    def dates
+    def date
       date_vals.map { |values| Date.new(*values) }
     end
 
