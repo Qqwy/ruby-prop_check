@@ -897,8 +897,21 @@ module PropCheck
     #
     # As another example, consider generating lists of integers:
     #
+    #     >> G = PropCheck::Generators
     #     >> G.tree(G.integer) {|child_gen| G.array(child_gen) }.sample(5, size: 37, rng: Random.new(42))
     #     => [[7, [2, 3], -10], [[-2], [-2, [3]], [[2, 3]]], [], [0, [-2, -3]], [[1], -19, [], [1, -1], [1], [-1, -1], [1]]]
+    #
+    # And finally, here is how one could create a simple generator for parsed JSON data:
+    #
+    # ```ruby`
+    #  G = PropCheck::Generators
+    #  def json
+    #    G.tree(G.one_of(G.boolean, G.real_float, G.ascii_string)) do |json_gen|
+    #      G.one_of(G.array(json_gen), G.hash_of(G.ascii_string, json_gen))
+    #    end
+    #  end
+    # ```
+    #
     def tree(leaf_generator, &block)
       # Implementation is based on
       # https://hexdocs.pm/stream_data/StreamData.html#tree/2
