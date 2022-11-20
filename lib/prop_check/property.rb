@@ -102,7 +102,7 @@ module PropCheck
     # you can immediately pass a block to this method.
     # (so `forall(a: Generators.integer).with_config(verbose: true) do ... end` is the same as `forall(a: Generators.integer).with_config(verbose: true).check do ... end`)
     def with_config(**config, &block)
-      duplicate = self.dup
+      duplicate = dup
       duplicate.instance_variable_set(:@config, @config.merge(config))
       duplicate.freeze
 
@@ -114,7 +114,7 @@ module PropCheck
     def with_bindings(*bindings, **kwbindings)
       raise ArgumentError, 'No bindings specified!' if bindings.empty? && kwbindings.empty?
 
-      duplicate = self.dup
+      duplicate = dup
       duplicate.instance_variable_set(:@gen, gen_from_bindings(bindings, kwbindings))
       duplicate.freeze
       duplicate
@@ -129,14 +129,16 @@ module PropCheck
     # you might encounter a GeneratorExhaustedError.
     # Only filter if you have few inputs to reject. Otherwise, improve your generators.
     def where(&condition)
-      raise ArgumentError, 'No generator bindings specified! #where should be called after `#forall` or `#with_bindings`.' unless @gen
+      unless @gen
+        raise ArgumentError,
+              'No generator bindings specified! #where should be called after `#forall` or `#with_bindings`.'
+      end
 
-      duplicate = self.dup
+      duplicate = dup
       duplicate.instance_variable_set(:@gen, @gen.where(&condition))
       duplicate.freeze
       duplicate
     end
-
 
     ##
     # Calls `hook` before each time a check is run with new data.
@@ -144,7 +146,7 @@ module PropCheck
     # This is useful to add setup logic
     # When called multiple times, earlier-added hooks will be called _before_ `hook` is called.
     def before(&hook)
-      duplicate = self.dup
+      duplicate = dup
       duplicate.instance_variable_set(:@hooks, @hooks.add_before(&hook))
       duplicate.freeze
       duplicate
@@ -156,7 +158,7 @@ module PropCheck
     # This is useful to add teardown logic
     # When called multiple times, earlier-added hooks will be called _after_ `hook` is called.
     def after(&hook)
-      duplicate = self.dup
+      duplicate = dup
       duplicate.instance_variable_set(:@hooks, @hooks.add_after(&hook))
       duplicate.freeze
       duplicate
@@ -176,7 +178,7 @@ module PropCheck
     # it is possible for the code after `yield` not to be called.
     # So make sure that cleanup logic is wrapped with the `ensure` keyword.
     def around(&hook)
-      duplicate = self.dup
+      duplicate = dup
       duplicate.instance_variable_set(:@hooks, @hooks.add_around(&hook))
       duplicate.freeze
       duplicate
@@ -223,15 +225,15 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
       raise_generator_exhausted!
     end
 
-    private def raise_generator_exhausted!()
-      raise Errors::GeneratorExhaustedError, """
+    private def raise_generator_exhausted!
+      raise Errors::GeneratorExhaustedError, ''"
         Could not perform `n_runs = #{@config.n_runs}` runs,
         (exhausted #{@config.max_generate_attempts} tries)
         because too few generator results were adhering to
         the `where` condition.
 
         Try refining your generators instead.
-        """
+        "''
     end
 
     private def check_attempt(generator_result, n_successful, &block)
@@ -246,7 +248,8 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
     # so we can shrink to find their cause.
     # don't worry: they all get reraised
     rescue Exception => e
-      output, shrunken_result, shrunken_exception, n_shrink_steps = show_problem_output(e, generator_result, n_successful, &block)
+      output, shrunken_result, shrunken_exception, n_shrink_steps = show_problem_output(e, generator_result,
+                                                                                        n_successful, &block)
       output_string = output.is_a?(StringIO) ? output.string : e.message
 
       e.define_singleton_method :prop_check_info do
@@ -264,7 +267,7 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
     end
 
     private def attempts_enum(binding_generator)
-        @hooks
+      @hooks
         .wrap_enum(raw_attempts_enum(binding_generator))
         .lazy
         .take(@config.n_runs)
@@ -275,7 +278,14 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
       size = 1
       (0...@config.max_generate_attempts)
         .lazy
-        .map { binding_generator.generate(size: size, rng: rng, max_consecutive_attempts: @config.max_consecutive_attempts) }
+        .map do
+        binding_generator.generate(
+          size: size,
+          rng: rng,
+          max_consecutive_attempts: @config.max_consecutive_attempts,
+          config: @config
+        )
+      end
         .map do |result|
           size += 1
 
@@ -287,7 +297,8 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
       output = @config.verbose ? STDOUT : StringIO.new
       output = PropCheck::Property::OutputFormatter.pre_output(output, n_successful, generator_results.root, problem)
       shrunken_result, shrunken_exception, n_shrink_steps = shrink(generator_results, output, &block)
-      output = PropCheck::Property::OutputFormatter.post_output(output, n_shrink_steps, shrunken_result, shrunken_exception)
+      output = PropCheck::Property::OutputFormatter.post_output(output, n_shrink_steps, shrunken_result,
+                                                                shrunken_exception)
 
       [output, shrunken_result, shrunken_exception, n_shrink_steps]
     end
