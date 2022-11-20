@@ -18,6 +18,9 @@ module PropCheck
     # - `default_epoch:` The 'base' value to use for date/time generators like
     #    `PropCheck::Generators#date` `PropCheck::Generators#future_date` `PropCheck::Generators#time`, etc.
     #    (Default: `DateTime.now`)
+    # - `resize_function` A proc that can be used to resize _all_ generators.
+    #    Takes the current size as integer and should return a new integer.
+    #   (Default: `proc { |size| size }`)
     Configuration = Struct.new(
       :verbose,
       :n_runs,
@@ -25,6 +28,7 @@ module PropCheck
       :max_shrink_steps,
       :max_consecutive_attempts,
       :default_epoch,
+      :resize_function,
       keyword_init: true
     ) do
       def initialize(
@@ -33,7 +37,8 @@ module PropCheck
         max_generate_attempts: 10_000,
         max_shrink_steps: 10_000,
         max_consecutive_attempts: 30,
-        default_epoch: DateTime.now
+        default_epoch: DateTime.now,
+        resize_function: proc { |size| size }
       )
         super
       end

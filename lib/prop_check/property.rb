@@ -111,6 +111,36 @@ module PropCheck
       duplicate
     end
 
+    def growing_exponentially
+      orig_fun = @config.resize_function
+      fun = proc { |size| 2.pow(orig_fun(size)) }
+      with_config(resize_function: fun)
+    end
+
+    def growing_quadratically
+      orig_fun = @config.resize_function
+      fun = proc { |size| orig_fun(size).pow(2) }
+      with_config(resize_function: fun)
+    end
+
+    def growing_fast
+      growth_fun = @config.resize_function
+      fun = proc { |size| growth_fun(size) * 2 }
+      with_config(resize_function: fun)
+    end
+
+    def growing_slow
+      growth_fun = @config.resize_function
+      fun = proc { |size| growth_fun(size) * 0.5 }
+      with_config(resize_function: fun)
+    end
+
+    def growing_logarithmically
+      orig_fun = @config.resize_function
+      fun = proc { |size| Math.log2(orig_fun(size)).to_i }
+      with_config(resize_function: fun)
+    end
+
     def with_bindings(*bindings, **kwbindings)
       raise ArgumentError, 'No bindings specified!' if bindings.empty? && kwbindings.empty?
 
@@ -280,7 +310,7 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
         .lazy
         .map do
         binding_generator.generate(
-          size: size,
+          size: @config.resize_function.call(size),
           rng: rng,
           max_consecutive_attempts: @config.max_consecutive_attempts,
           config: @config
