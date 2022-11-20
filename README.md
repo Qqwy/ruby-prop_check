@@ -64,7 +64,7 @@ Before releasing v1.0, we want to finish the following:
 - [ ] A usage guide.
 - [ ] A simple way to create recursive generators
 - [ ] Builtin generation of `Set`s
-- [ ] Builtin generation of `Date`s, `Time`s and `DateTime`s.
+- [x] Builtin generation of `Date`s, `Time`s and `DateTime`s.
 - [ ] Configuration option to resize all generators given to a particular Property instance.
 
 ## Nice-to-haves
