@@ -699,18 +699,9 @@ module PropCheck
     end
 
     ##
-    # Generates DateTimes.
-    # DateTimes start around the year 2022 and deviate more when `size` increases.
-    #
-    #   >> Generators.date_time.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
-    #   => [DateTime.new(2018, 4, 29, 14, 42, 7), DateTime.new(2032, 7, 26, 18, 22, 10)]
-    def date_time
-      date_time_vals.map { |values| DateTime.new(*values) }
-    end
-
-    ##
-    # Generates Dates.
-    # Dates start around the year 2022 and deviate more when `size` increases.
+    # Generates `Date` objects.
+    # DateTimes start around the given `epoch:`  and deviate more when `size` increases.
+    # when no epoch is set, `PropCheck::Property::Configuration.default_epoch` is used, which defaults to `DateTime.now.to_date`.
     #
     #   >> Generators.date(epoch: Date.new(2022, 01, 01)).sample(2, rng: Random.new(42))
     #   => [Date.new(2021, 12, 28), Date.new(2022, 01, 10)]
@@ -718,10 +709,20 @@ module PropCheck
       date_from_offset(integer, epoch: epoch)
     end
 
+    ##
+    # variant of #date that only generates dates in the future (relative to `:epoch`).
+    #
+    #   >> Generators.future_date(epoch: Date.new(2022, 01, 01)).sample(2, rng: Random.new(42))
+    #   => [Date.new(2022, 01, 06), Date.new(2022, 01, 11)]
     def future_date(epoch: Date.today)
       date_from_offset(positive_integer, epoch: epoch)
     end
 
+    ##
+    # variant of #date that only generates dates in the past (relative to `:epoch`).
+    #
+    #   >> Generators.past_date(epoch: Date.new(2022, 01, 01)).sample(2, rng: Random.new(42))
+    #   => [Date.new(2021, 12, 27), Date.new(2021, 12, 22)]
     def past_date(epoch: Date.today)
       date_from_offset(negative_integer, epoch: epoch)
     end
@@ -738,21 +739,40 @@ module PropCheck
       end
     end
 
+    ##
+    # Generates `DateTime` objects.
+    # DateTimes start around the given `epoch:`  and deviate more when `size` increases.
+    # when no epoch is set, `PropCheck::Property::Configuration.default_epoch` is used, which defaults to `DateTime.now`.
+    #
+    #   >> PropCheck::Generators.time.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
+    #   => [DateTime.parse("2022-11-17 07:11:59.999983907 +0000").to_time, DateTime.parse("2022-11-19 05:27:16.363618076 +0000").to_time]
     def datetime(epoch: nil)
       datetime_from_offset(real_float, epoch: epoch)
     end
 
+    ##
+    # alias for `#datetime`, for backwards compatibility.
+    # Prefer using `datetime`!
+    def date_time(epoch: nil)
+      datetime(epoch: epoch)
+    end
+
+    ##
+    # Variant of `#datetime` that only generates datetimes in the future (relative to `:epoch`).
     def future_datetime(epoch: nil)
       datetime_from_offset(real_positive_float, epoch: epoch)
     end
 
+    ##
+    # Variant of `#datetime` that only generates datetimes in the past (relative to `:epoch`).
     def past_datetime(epoch: nil)
       datetime_from_offset(real_negative_float, epoch: epoch)
     end
 
     ##
-    # Generates Times.
-    # Times start around the year 2022 and deviate more when `size` increases.
+    # Generates `Time` objects.
+    # Times start around the given `epoch:`  and deviate more when `size` increases.
+    # when no epoch is set, `PropCheck::Property::Configuration.default_epoch` is used, which defaults to `DateTime.now`.
     #
     #   >> PropCheck::Generators.time.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
     #   => [DateTime.parse("2022-11-17 07:11:59.999983907 +0000").to_time, DateTime.parse("2022-11-19 05:27:16.363618076 +0000").to_time]
@@ -760,10 +780,14 @@ module PropCheck
       datetime(epoch: epoch).map(&:to_time)
     end
 
+    ##
+    # Variant of `#time` that only generates datetimes in the future (relative to `:epoch`).
     def future_time(epoch: nil)
       future_datetime(epoch: epoch).map(&:to_time)
     end
 
+    ##
+    # Variant of `#time` that only generates datetimes in the past (relative to `:epoch`).
     def past_time(epoch: nil)
       past_datetime(epoch: epoch).map(&:to_time)
     end
@@ -777,22 +801,6 @@ module PropCheck
           DateTime.jd(epoch.ajd + offset)
         end
       end
-    end
-
-    private def date_vals
-      tuple(
-        integer.map { |i| i + 2022 },
-        choose(1..12),
-        choose(1..31)
-      ).where { |date_tuple| Date.valid_date?(*date_tuple) }
-    end
-
-    private def date_time_vals
-      tuple(date_vals, time_vals).map { |date, time| date + time }
-    end
-
-    private def time_vals
-      tuple(choose(0..23), choose(0..59), choose(0..59))
     end
 
     ##
