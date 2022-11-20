@@ -11,7 +11,8 @@ module PropCheck
     @@default_size = 10
     @@default_rng = Random.new
     @@max_consecutive_attempts = 100
-    @@default_kwargs = {size: @@default_size, rng: @@default_rng, max_consecutive_attempts: @@max_consecutive_attempts}
+    @@default_kwargs = { size: @@default_size, rng: @@default_rng,
+                         max_consecutive_attempts: @@max_consecutive_attempts }
 
     ##
     # Being a special kind of Proc, a Generator wraps a block.
@@ -33,11 +34,11 @@ module PropCheck
         return res
       end
 
-      raise Errors::GeneratorExhaustedError, """
+      raise Errors::GeneratorExhaustedError, ''"
       Exhausted #{max_consecutive_attempts} consecutive generation attempts.
 
       Probably too few generator results were adhering to a `where` condition.
-      """
+      "''
     end
 
     ##
@@ -88,7 +89,7 @@ module PropCheck
       #   end.flatten
       # end
       Generator.new do |**kwargs|
-        outer_result = self.generate(**kwargs)
+        outer_result = generate(**kwargs)
         outer_result.bind do |outer_val|
           inner_generator = generator_proc.call(outer_val)
           inner_generator.generate(**kwargs)
@@ -103,15 +104,30 @@ module PropCheck
     #   => "S"
     def map(&proc)
       Generator.new do |**kwargs|
-        result = self.generate(**kwargs)
+        result = generate(**kwargs)
         result.map(&proc)
+      end
+    end
+
+    ##
+    # Turns a generator returning `x` into a generator returning `[x, config]`
+    # where `config` is the current `PropCheck::Property::Configuration`.
+    # This can be used to inspect the configuration inside a `#map` or `#where`
+    # and act on it.
+    #
+    #  >> Generators.choose(0..100).with_config.map { |int, conf| Date.jd(conf[:default_epoch].jd + int) }.call(size: 10, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
+    #  => Date.new(2023, 01, 10)
+    def with_config
+      Generator.new do |**kwargs|
+        result = generate(**kwargs)
+        result.map { |val| [val, kwargs[:config]] }
       end
     end
 
     ##
     # Creates a new Generator that only produces a value when the block `condition` returns a truthy value.
     def where(&condition)
-      self.map do |result|
+      map do |result|
         # if condition.call(*result)
         if PropCheck::Helper.call_splatted(result, &condition)
           result
@@ -131,7 +147,7 @@ module PropCheck
     def resize(&proc)
       Generator.new do |size:, **other_kwargs|
         new_size = proc.call(size)
-        self.generate(**other_kwargs, size: new_size)
+        generate(**other_kwargs, size: new_size)
       end
     end
   end

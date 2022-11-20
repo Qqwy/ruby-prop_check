@@ -136,7 +136,8 @@ module PropCheck
     # that is: no infinity, no NaN,
     # no numbers testing the limits of floating-point arithmetic.
     #
-    # Shrinks to numbers closer to zero.
+    # Shrinks towards zero.
+    # The shrinking strategy also moves towards 'simpler' floats (like `1.0`) from 'complicated' floats (like `3.76543`).
     #
     #    >> Generators.real_float().sample(10, size: 10, rng: Random.new(42))
     #    => [-2.2, -0.2727272727272727, 4.0, 1.25, -3.7272727272727275, -8.833333333333334, -8.090909090909092, 1.1428571428571428, 0.0, 8.0]
@@ -146,7 +147,75 @@ module PropCheck
       end
     end
 
-    @@special_floats = [Float::NAN, Float::INFINITY, -Float::INFINITY, Float::MAX, Float::MIN, 0.0.next_float,
+    ##
+    # Generates any real floating-point numbers,
+    # but will never generate zero.
+    # c.f. #real_float
+    #
+    #    >> Generators.real_nonzero_float().sample(10, size: 10, rng: Random.new(43))
+    #    => [-7.25, 7.125, -7.636363636363637, -3.0, -8.444444444444445, -6.857142857142857, 2.4545454545454546, 3.0, -7.454545454545455, -6.25]
+    def real_nonzero_float
+      real_float.where { |val| val != 0.0 }
+    end
+
+    ##
+    # Generates real floating-point numbers which are never negative.
+    # Shrinks towards 0
+    # c.f. #real_float
+    #
+    #    >> Generators.real_nonnegative_float().sample(10, size: 10, rng: Random.new(43))
+    #    => [7.25, 7.125, 7.636363636363637, 3.0, 8.444444444444445, 0.0, 6.857142857142857, 2.4545454545454546, 3.0, 7.454545454545455]
+    def real_nonnegative_float
+      real_float.map(&:abs)
+    end
+
+    ##
+    # Generates real floating-point numbers which are never positive.
+    # Shrinks towards 0
+    # c.f. #real_float
+    #
+    #    >> Generators.real_nonpositive_float().sample(10, size: 10, rng: Random.new(44))
+    #    => [-9.125, -2.3636363636363638, -8.833333333333334, -1.75, -8.4, -2.4, -3.5714285714285716, -1.0, -6.111111111111111, -4.0]
+    def real_nonpositive_float
+      real_nonnegative_float.map(&:-@)
+    end
+
+    ##
+    # Generates real floating-point numbers which are always positive
+    # Shrinks towards Float::MIN
+    #
+    # Does not consider denormals.
+    # c.f. #real_float
+    #
+    #    >> Generators.real_positive_float().sample(10, size: 10, rng: Random.new(42))
+    #    => [2.2, 0.2727272727272727, 4.0, 1.25, 3.7272727272727275, 8.833333333333334, 8.090909090909092, 1.1428571428571428, 2.2250738585072014e-308, 8.0]
+    def real_positive_float
+      real_nonnegative_float.map { |val| val + Float::MIN }
+    end
+
+    ##
+    # Generates real floating-point numbers which are always negative
+    # Shrinks towards -Float::MIN
+    #
+    # Does not consider denormals.
+    # c.f. #real_float
+    #
+    #    >> Generators.real_negative_float().sample(10, size: 10, rng: Random.new(42))
+    #    => [-2.2, -0.2727272727272727, -4.0, -1.25, -3.7272727272727275, -8.833333333333334, -8.090909090909092, -1.1428571428571428, -2.2250738585072014e-308, -8.0]
+    def real_negative_float
+      real_positive_float.map(&:-@)
+    end
+
+    @@special_floats = [Float::NAN,
+                        Float::INFINITY,
+                        -Float::INFINITY,
+                        Float::MAX,
+                        -Float::MAX,
+                        Float::MIN,
+                        -Float::MIN,
+                        Float::EPSILON,
+                        -Float::EPSILON,
+                        0.0.next_float,
                         0.0.prev_float]
     ##
     # Generates floating-point numbers
@@ -154,13 +223,54 @@ module PropCheck
     # as well as Float::EPSILON, Float::MAX, Float::MIN,
     # 0.0.next_float, 0.0.prev_float,
     # to test the handling of floating-point edge cases.
-    # Approx. 1/100 generated numbers is a special one.
+    # Approx. 1/50 generated numbers is a special one.
     #
     # Shrinks to smaller, real floats.
     #    >> Generators.float().sample(10, size: 10, rng: Random.new(42))
-    #    => [4.0, 9.555555555555555, 0.0, -Float::INFINITY, 5.5, -5.818181818181818, 1.1428571428571428, 0.0, 8.0, 7.857142857142858]
+    #    >>  Generators.float().sample(10, size: 10, rng: Random.new(4))
+    #    => [-8.0, 2.0, 2.7142857142857144, -4.0, -10.2, -6.666666666666667, -Float::INFINITY, -10.2, 2.1818181818181817, -6.2]
     def float
-      frequency(99 => real_float, 1 => one_of(*@@special_floats.map(&method(:constant))))
+      frequency(49 => real_float, 1 => one_of(*@@special_floats.map(&method(:constant))))
+    end
+
+    ##
+    # Generates any nonzerno floating-point number.
+    # Will generate special floats (except NaN) from time to time.
+    # c.f. #float
+    def nonzero_float
+      float.where { |val| val != 0.0 && val }
+    end
+
+    ##
+    # Generates nonnegative floating point numbers
+    # Will generate special floats (except NaN) from time to time.
+    # c.f. #float
+    def nonnegative_float
+      float.map(&:abs).where { |val| val != Float::NAN }
+    end
+
+    ##
+    # Generates nonpositive floating point numbers
+    # Will generate special floats (except NaN) from time to time.
+    # c.f. #float
+    def nonpositive_float
+      nonnegative_float.map(&:-@)
+    end
+
+    ##
+    # Generates positive floating point numbers
+    # Will generate special floats (except NaN) from time to time.
+    # c.f. #float
+    def positive_float
+      nonnegative_float.where { |val| val != 0.0 && val }
+    end
+
+    ##
+    # Generates positive floating point numbers
+    # Will generate special floats (except NaN) from time to time.
+    # c.f. #float
+    def negative_float
+      positive_float.map(&:-@).where { |val| val != 0.0 }
     end
 
     ##
@@ -560,8 +670,8 @@ module PropCheck
     #
     # Shrinks towards simpler terms, like `true`, an empty array, a single character or an integer.
     #
-    #    >> Generators.truthy.sample(5, size: 10, rng: Random.new(42))
-    #    => [[4, 0, -3, 10, -4, 8, 0, 0, 10], -3, [5.5, -5.818181818181818, 1.1428571428571428, 0.0, 8.0, 7.857142857142858, -0.6666666666666665, 5.25], [], ["\u{9E553}\u{DD56E}\u{A5BBB}\u{8BDAB}\u{3E9FC}\u{C4307}\u{DAFAE}\u{1A022}\u{938CD}\u{70631}", "\u{C4C01}\u{32D85}\u{425DC}"]]
+    #    >> Generators.truthy.sample(5, size: 2, rng: Random.new(42))
+    #    => [[2], {:gz=>0, :""=>0}, [1.0, 0.5], 0.6666666666666667, {"𦐺\u{9FDDB}"=>1, ""=>1}]
     def truthy
       one_of(constant(true),
              constant([]),
@@ -592,30 +702,81 @@ module PropCheck
     # Generates DateTimes.
     # DateTimes start around the year 2022 and deviate more when `size` increases.
     #
-    #   >> Generators.date_time.sample(2, rng: Random.new(42))
+    #   >> Generators.date_time.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
     #   => [DateTime.new(2018, 4, 29, 14, 42, 7), DateTime.new(2032, 7, 26, 18, 22, 10)]
     def date_time
       date_time_vals.map { |values| DateTime.new(*values) }
     end
 
     ##
-    # Generates Times.
-    # Times start around the year 2022 and deviate more when `size` increases.
-    #
-    #   >> PropCheck::Generators.time.sample(2, rng: Random.new(42))
-    #   => [Time.new(2018, 4, 29, 14, 42, 7), Time.new(2032, 7, 26, 18, 22, 10)]
-    def time
-      date_time_vals.map { |values| Time.new(*values) }
-    end
-
-    ##
     # Generates Dates.
     # Dates start around the year 2022 and deviate more when `size` increases.
     #
-    #   >> Generators.date.sample(2, rng: Random.new(42))
-    #   => [Date.new(2018, 4, 29), Date.new(2026, 11, 8)]
-    def date
-      date_vals.map { |values| Date.new(*values) }
+    #   >> Generators.date(epoch: Date.new(2022, 01, 01)).sample(2, rng: Random.new(42))
+    #   => [Date.new(2021, 12, 28), Date.new(2022, 01, 10)]
+    def date(epoch: nil)
+      date_from_offset(integer, epoch: epoch)
+    end
+
+    def future_date(epoch: Date.today)
+      date_from_offset(positive_integer, epoch: epoch)
+    end
+
+    def past_date(epoch: Date.today)
+      date_from_offset(negative_integer, epoch: epoch)
+    end
+
+    private def date_from_offset(offset_gen, epoch:)
+      if epoch
+        offset_gen.map { |offset| Date.jd(epoch.jd + offset) }
+      else
+        offset_gen.with_config.map do |offset, config|
+          puts config.inspect
+          epoch = config.default_epoch.to_date
+          Date.jd(epoch.jd + offset)
+        end
+      end
+    end
+
+    def datetime(epoch: nil)
+      datetime_from_offset(real_float, epoch: epoch)
+    end
+
+    def future_datetime(epoch: nil)
+      datetime_from_offset(real_positive_float, epoch: epoch)
+    end
+
+    def past_datetime(epoch: nil)
+      datetime_from_offset(real_negative_float, epoch: epoch)
+    end
+
+    ##
+    # Generates Times.
+    # Times start around the year 2022 and deviate more when `size` increases.
+    #
+    #   >> PropCheck::Generators.time.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
+    #   => [DateTime.parse("2022-11-17 07:11:59.999983907 +0000").to_time, DateTime.parse("2022-11-19 05:27:16.363618076 +0000").to_time]
+    def time(epoch: nil)
+      datetime(epoch: epoch).map(&:to_time)
+    end
+
+    def future_time(epoch: nil)
+      future_datetime(epoch: epoch).map(&:to_time)
+    end
+
+    def past_time(epoch: nil)
+      past_datetime(epoch: epoch).map(&:to_time)
+    end
+
+    private def datetime_from_offset(offset_gen, epoch:)
+      if epoch
+        offset_gen.map { |offset| DateTime.jd(epoch.ajd + offset) }
+      else
+        offset_gen.with_config.map do |offset, config|
+          epoch = config.default_epoch.to_date
+          DateTime.jd(epoch.ajd + offset)
+        end
+      end
     end
 
     private def date_vals
@@ -627,8 +788,11 @@ module PropCheck
     end
 
     private def date_time_vals
-      time_vals = tuple(choose(0..23), choose(0..59), choose(0..59))
       tuple(date_vals, time_vals).map { |date, time| date + time }
+    end
+
+    private def time_vals
+      tuple(choose(0..23), choose(0..59), choose(0..59))
     end
 
     ##
