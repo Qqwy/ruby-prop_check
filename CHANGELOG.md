@@ -5,6 +5,7 @@
       - Extra functions to generate dates/times/datetimes in the future or the past.
       - Allow overriding the epoch that is used.
       - A new option in `PropCheck::Property::Configuration` to set the default epoch.
+    - Generator to generate `Set`s.
     - New builtin float generators (positive, negative, nonzero, nonnegative, nonpositive). Both in 'normal' flavor and in 'real' flavor (that will never generate infinity or other special values).
     - `PropCheck::Generator#with_config` which enables the possibility to inspect and act on the current `PropCheck::Property::Configuration` while generating values.
   - Fixes:
