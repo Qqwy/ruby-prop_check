@@ -1,3 +1,6 @@
+- 0.18.0
+  - Features:
+    - Allows calling `PropCheck::Property#check` without a block, which will just return `self`. This is useful for writing wrapper functions that use `before/after/around/with_config` etc hooks which might themselves optionally want a block so they can be chained. (See the `forall_with_db` snippet in the README for an example)
 - 0.17.0
   - Features:
     - Recursive generation using `PropCheck::Generators.tree`.
