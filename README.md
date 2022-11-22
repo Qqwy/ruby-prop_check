@@ -107,7 +107,7 @@ PropCheck.forall(G.array(G.integer)) do |numbers|
   
   # Check that no number is smaller than the previous number
   sorted_numbers.each_cons(2) do |former, latter| 
-    raise "Elements are not sorted! #{latter} is < #{former}" if latter < former
+    raise "Elements are not sorted! #{latter} is < #{former}" if latter > former
   end
 end
 ```
@@ -122,32 +122,53 @@ def naive_average(array)
   array.sum / array.length
 end
 ```
-```ruby
-# And then in a test case:
-G = PropCheck::Generators
-PropCheck.forall(numbers: G.array(G.integer)) do |numbers:|
-  result = naive_average(numbers)
-  unless result.is_a?(Integer) do
-    raise "Expected the average to be an integer!"
-  end
-end
 
-# Or if you e.g. are using RSpec:
-describe "#naive_average" do
-  include PropCheck
+The test case, using RSpec:
+``` ruby
+require 'rspec'
+
+RSpec.describe "#naive_average" do
   G = PropCheck::Generators
 
   it "returns an integer for any input" do
-    forall(numbers: G.array(G.integer)) do |numbers:|
-      result = naive_average(numbers)      
+    PropCheck.forall(G.array(G.integer)) do |numbers|
+      result = naive_average(numbers)
+
       expect(result).to be_a(Integer)
     end
   end
 end
 ```
 
-When running this particular example PropCheck very quickly finds out that we have made a programming mistake:
+The test case, using MiniTest:
+``` ruby
+require 'minitest/autorun'
+class NaiveAverageTest < MiniTest::Unit::TestCase
+  G = PropCheck::Generators
 
+  def test_that_it_returns_an_integer_for_any_input()
+    PropCheck.forall(G.array(G.integer)) do |numbers|
+      result = naive_average(numbers)
+
+      assert_instance_of(Integer, result)
+    end
+  end
+end
+```
+
+The test case, using only vanilla Ruby:
+```ruby
+# And then in a test case:
+G = PropCheck::Generators
+
+PropCheck.forall(G.array(G.integer)) do |numbers|
+  result = naive_average(numbers)
+
+  raise "Expected the average to be an integer!" unless result.is_a?(Integer)
+end
+```
+
+When running this particular example PropCheck very quickly finds out that we have made a programming mistake:
 ```ruby
 ZeroDivisionError: 
 (after 6 successful property test runs)
@@ -269,6 +290,26 @@ although above are the most generally useful ones.
 
 [PropCheck::Generator documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generator)
 [PropCheck::Generators documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generators)
+
+
+## Usage within Rails / with a database
+
+Using PropCheck for unit tests in a Rails, Sinatra, Hanami, etc. project is very easy.
+Here are some simple recommendations for the best results:
+- Tests that do not need to use the DB at all are usually 10x-100x faster. Faster tests means that you can configure PropCheck to do more test runs.
+- If you do need to use the database, use the [database_cleaner](https://github.com/DatabaseCleaner/database_cleaner) gem, preferibly with the fast `:transaction` strategy if your RDBMS supports it. To make sure the DB is cleaned around each generated example, you can write the following helper:
+``` ruby
+  # Version of PropCheck.forall
+  # which ensures records persisted to the DB in one generated example
+  # do not affect any other
+  def forall_with_db(*args, **kwargs, &block)
+      PropCheck.forall(*args, **kwargs)
+               .before { DatabaseCleaner.start }
+               .after { DatabaseCleaner.clean }
+               .check(&block)
+  end
+```
+- Other setup/cleanup should also usually happen around each generated example rather than around the whole test: Instead of using the hooks exposed by RSpec/MiniTest/etc., use the before/after/around hooks exposed by PropCheck.
 
 ## Development
 

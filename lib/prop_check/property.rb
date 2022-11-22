@@ -42,11 +42,8 @@ module PropCheck
     # of this class on before finally passing a block to it using `#check`.
     # (so `forall(Generators.integer) do |val| ... end` and forall(Generators.integer).check do |val| ... end` are the same)
     def self.forall(*bindings, **kwbindings, &block)
-      property = new(*bindings, **kwbindings)
-
-      return property.check(&block) if block_given?
-
-      property
+      new(*bindings, **kwbindings)
+        .check(&block)
     end
 
     ##
@@ -106,9 +103,7 @@ module PropCheck
       duplicate.instance_variable_set(:@config, @config.merge(config))
       duplicate.freeze
 
-      return duplicate.check(&block) if block_given?
-
-      duplicate
+      duplicate.check(&block)
     end
 
     ##
@@ -248,6 +243,8 @@ module PropCheck
     ##
     # Checks the property (after settings have been altered using the other instance methods in this class.)
     def check(&block)
+      return self unless block_given?
+
       n_runs = 0
       n_successful = 0
 
