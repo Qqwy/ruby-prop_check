@@ -40,9 +40,9 @@ It works by generating arbitrary data matching your specification and checking t
 
 Writing these kinds of tests usually consists of deciding on guarantees that your code should have -- properties that should always hold true, regardless of wat the world throws at you. Some examples are:
 
-- Your code should not throw an exception, or only a particular type of exception.
+- Your code should never crash.
 - If you remove an object, you can no longer see it
-- If you serialize and then deserializea value, you get the same value back.
+- If you serialize and then deserialize a value, you get the same value back.
 
 
 ## Implemented and still missing features
