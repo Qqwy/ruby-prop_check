@@ -116,7 +116,7 @@ module PropCheck
     # and act on it.
     #
     #  >> Generators.choose(0..100).with_config.map { |int, conf| Date.jd(conf[:default_epoch].jd + int) }.call(size: 10, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
-    #  => Date.new(2023, 01, 10)
+    #  => Date.new(2023, 01, 12)
     def with_config
       Generator.new do |**kwargs|
         result = generate(**kwargs)

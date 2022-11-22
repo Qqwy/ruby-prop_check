@@ -769,7 +769,7 @@ module PropCheck
     # DateTimes start around the given `epoch:`  and deviate more when `size` increases.
     # when no epoch is set, `PropCheck::Property::Configuration.default_epoch` is used, which defaults to `DateTime.now`.
     #
-    #   >> PropCheck::Generators.datetime.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
+    #   >> PropCheck::Generators.datetime(epoch: Date.new(2022, 11, 20)).sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
     #   => [DateTime.parse("2022-11-17 07:11:59.999983907 +0000"), DateTime.parse("2022-11-19 05:27:16.363618076 +0000")]
     def datetime(epoch: nil)
       datetime_from_offset(real_float, epoch: epoch)
@@ -785,7 +785,7 @@ module PropCheck
     ##
     # Variant of `#datetime` that only generates datetimes in the future (relative to `:epoch`).
     #
-    #   >> PropCheck::Generators.future_datetime.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new).map(&:inspect)
+    #   >> PropCheck::Generators.future_datetime(epoch: Date.new(2022, 11, 20)).sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new).map(&:inspect)
     #   => ["#<DateTime: 2022-11-21T16:48:00+00:00 ((2459905j,60480s,16093n),+0s,2299161j)>", "#<DateTime: 2022-11-19T18:32:43+00:00 ((2459903j,66763s,636381924n),+0s,2299161j)>"]
     def future_datetime(epoch: nil)
       datetime_from_offset(real_positive_float, epoch: epoch)
@@ -794,7 +794,7 @@ module PropCheck
     ##
     # Variant of `#datetime` that only generates datetimes in the past (relative to `:epoch`).
     #
-    #   >> PropCheck::Generators.past_datetime.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
+    #   >> PropCheck::Generators.past_datetime(epoch: Date.new(2022, 11, 20)).sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
     #   => [DateTime.parse("2022-11-17 07:11:59.999983907 +0000"), DateTime.parse("2022-11-19 05:27:16.363618076 +0000")]
     def past_datetime(epoch: nil)
       datetime_from_offset(real_negative_float, epoch: epoch)
@@ -805,7 +805,7 @@ module PropCheck
     # Times start around the given `epoch:`  and deviate more when `size` increases.
     # when no epoch is set, `PropCheck::Property::Configuration.default_epoch` is used, which defaults to `DateTime.now`.
     #
-    #   >> PropCheck::Generators.time.sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
+    #   >> PropCheck::Generators.time(epoch: Date.new(2022, 11, 20)).sample(2, rng: Random.new(42), config: PropCheck::Property::Configuration.new)
     #   => [DateTime.parse("2022-11-17 07:11:59.999983907 +0000").to_time, DateTime.parse("2022-11-19 05:27:16.363618076 +0000").to_time]
     def time(epoch: nil)
       datetime(epoch: epoch).map(&:to_time)
