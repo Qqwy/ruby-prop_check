@@ -115,7 +115,9 @@ module PropCheck
     # This can be used to inspect the configuration inside a `#map` or `#where`
     # and act on it.
     #
-    #  >> Generators.choose(0..100).with_config.map { |int, conf| Date.jd(conf[:default_epoch].jd + int) }.call(size: 10, rng: Random.new(42), config: PropCheck::Property::Configuration.new(default_epoch: Date.new(2022, 11, 22)))
+    #  >> example_config = PropCheck::Property::Configuration.new(default_epoch: Date.new(2022, 11, 22))
+    #  >> generator = Generators.choose(0..100).with_config.map { |int, conf| Date.jd(conf[:default_epoch].jd + int) }
+    #  >> generator.call(size: 10, rng: Random.new(42), config: example_config)
     #  => Date.new(2023, 01, 12)
     def with_config
       Generator.new do |**kwargs|
