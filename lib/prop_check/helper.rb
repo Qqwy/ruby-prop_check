@@ -33,6 +33,9 @@ module PropCheck
     end
 
     def call_splatted(val, &block)
+      # Handle edge case where Ruby >= 3 behaves differently than Ruby <= 2
+      # c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-keyword-arguments-in-ruby-3-0/#other-minor-changes-empty-hash
+      return block.call({}) if val.is_a?(Hash) && val.empty?
       return block.call(**val) if val.is_a?(Hash) && val.keys.all? { |k| k.is_a?(Symbol) }
 
       block.call(val)
