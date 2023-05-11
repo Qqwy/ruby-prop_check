@@ -1,3 +1,8 @@
+- 0.18.1
+  - Fixes:
+    - Compatibility with Ruby 3.2:
+      - Use `Random` instead of no-longer-available `Random::DEFAULT` on Ruby 3.x.
+      - Ensure when a hash is passed (such as in `PropCheck.forall(hash_of(integer, string)) { |hash| ... }` that when an empty hash is generated, `hash` is still `{}` and not `nil`. ([Ruby 3.x treats `fun(**{})` differently than Ruby 2.x](https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-keyword-arguments-in-ruby-3-0/#other-minor-changes-empty-hash))
 - 0.18.0
   - Features:
     - Allows calling `PropCheck::Property#check` without a block, which will just return `self`. This is useful for writing wrapper functions that use `before/after/around/with_config` etc hooks which might themselves optionally want a block so they can be chained. (See the `forall_with_db` snippet in the README for an example)
