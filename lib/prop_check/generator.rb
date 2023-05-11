@@ -9,7 +9,14 @@ module PropCheck
   # to be used during the shrinking phase.
   class Generator
     @@default_size = 10
-    @@default_rng = Random.new
+    @@default_rng =
+      # Backwards compatibility: Random::DEFAULT is deprecated in Ruby 3.x
+      # but required in Ruby 2.x and 1.x
+      if RUBY_VERSION.to_i >= 3
+        Random
+      else
+        Random::DEFAULT
+      end
     @@max_consecutive_attempts = 100
     @@default_kwargs = { size: @@default_size, rng: @@default_rng,
                          max_consecutive_attempts: @@max_consecutive_attempts }

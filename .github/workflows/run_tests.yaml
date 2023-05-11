@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['2.5', '2.6', '2.7', '3.0']
+        # NOTE: Ruby 3.2 is not in here, as `doctest-core` first needs to be updated to support it
+        ruby-version: ['2.6', '2.7', '3.0', '3.1']
 
     steps:
     - uses: actions/checkout@v3
@@ -30,6 +31,6 @@ jobs:
     - name: Run tests & push test coverage to Codeclimate
       uses: paambaati/codeclimate-action@v3.2.0
       env:
-        CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPORTER_ID }}
+        CC_TEST_REPORTER_ID: '9d18f5b43e49eecd6c3da64d85ea9c765d3606c129289d7c8cadf6d448713311'
       with:
         coverageCommand: bundle exec rake

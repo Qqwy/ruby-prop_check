@@ -332,7 +332,7 @@ c.f. https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-k
     end
 
     private def raw_attempts_enum(binding_generator)
-      rng = Random::DEFAULT
+      rng = Random.new
       size = 1
       (0...@config.max_generate_attempts)
         .lazy
