@@ -1,4 +1,4 @@
-require 'doctest/rspec'
+require 'doctest2/rspec'
 
 
 RSpec.describe PropCheck::Generator do
