@@ -266,7 +266,7 @@ module PropCheck
     end
 
     ##
-    # Generates positive floating point numbers
+    # Generates negative floating point numbers
     # Will generate special floats (except NaN) from time to time.
     # c.f. #float
     def negative_float
