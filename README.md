@@ -5,7 +5,7 @@ PropCheck allows you to do Property Testing in Ruby.
 [![Gem](https://img.shields.io/gem/v/prop_check.svg)](https://rubygems.org/gems/prop_check)
 [![Ruby RSpec tests build status](https://github.com/Qqwy/ruby-prop_check/actions/workflows/run_tests.yaml/badge.svg)](https://github.com/Qqwy/ruby-prop_check/actions/workflows/run_tests.yaml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/71897f5e6193a5124a53/maintainability)](https://codeclimate.com/github/Qqwy/ruby-prop_check/maintainability)
-[![RubyDoc](https://img.shields.io/badge/%F0%9F%93%9ARubyDoc-documentation-informational.svg)](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/)
+[![RubyDoc](https://img.shields.io/badge/%F0%9F%93%9ARubyDoc-documentation-informational.svg)](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/main/)
 
 It features:
 
@@ -222,7 +222,7 @@ A short summary:
 
 ### Builtin Generators
 
-PropCheck comes with [many builtin generators in the PropCheck::Generators](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generators) module.
+PropCheck comes with [many builtin generators in the PropCheck::Generators](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/main/PropCheck/Generators) module.
 
 It contains generators for:
 - (any, positive, negative, etc.) integers, 
@@ -288,8 +288,8 @@ you can use `Generators.frequency` which takes a hash of (integer_frequency => g
 There are even more functions in the `Generator` class and the `Generators` module that you might want to use,
 although above are the most generally useful ones.
 
-[PropCheck::Generator documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generator)
-[PropCheck::Generators documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generators)
+[PropCheck::Generator documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/main/PropCheck/Generator)
+[PropCheck::Generators documentation](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/main/PropCheck/Generators)
 
 
 ## Usage within Rails / with a database
@@ -331,7 +331,7 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the PropCheck project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/Qqwy/ruby-prop_check/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the PropCheck project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/Qqwy/ruby-prop_check/blob/main/CODE_OF_CONDUCT.md).
 
 ## Attribution and Thanks
 
