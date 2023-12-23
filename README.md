@@ -156,6 +156,23 @@ class NaiveAverageTest < MiniTest::Unit::TestCase
 end
 ```
 
+The test case, using test-unit:
+``` ruby
+require "test-unit"
+
+class TestNaiveAverage < Test::Unit::TestCase
+  G = PropCheck::Generators
+
+  def test_that_it_returns_an_integer_for_any_input
+    PropCheck.forall(G.array(G.integer)) do |numbers|
+      result = naive_average(numbers)
+
+      assert_instance_of(Integer, result)
+    end
+  end
+end
+```
+
 The test case, using only vanilla Ruby:
 ```ruby
 # And then in a test case:
@@ -309,7 +326,7 @@ Here are some simple recommendations for the best results:
                .check(&block)
   end
 ```
-- Other setup/cleanup should also usually happen around each generated example rather than around the whole test: Instead of using the hooks exposed by RSpec/MiniTest/etc., use the before/after/around hooks exposed by PropCheck.
+- Other setup/cleanup should also usually happen around each generated example rather than around the whole test: Instead of using the hooks exposed by RSpec/MiniTest/test-unit/etc., use the before/after/around hooks exposed by PropCheck.
 
 ## Development
 
