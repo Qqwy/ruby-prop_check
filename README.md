@@ -222,7 +222,7 @@ A short summary:
 
 ### Builtin Generators
 
-PropCheck comes with [many builtin generators in the PropCheck::Generators](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/master/PropCheck/Generators) module.
+PropCheck comes with [many builtin generators in the PropCheck::Generators](https://www.rubydoc.info/github/Qqwy/ruby-prop_check/main/PropCheck/Generators) module.
 
 It contains generators for:
 - (any, positive, negative, etc.) integers, 
