@@ -250,7 +250,7 @@ Always returns the given value. No shrinking.
 
 Allows you to take the result of one generator and transform it into something else.
     
-    >> G.choose(32..128).map(&:chr).sample(1, size: 10, Random.new(42))
+    >> G.choose(32..128).map(&:chr).sample(1, size: 10, rng: Random.new(42))
     => ["S"]
 
 #### Generator#bind
