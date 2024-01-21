@@ -262,7 +262,7 @@ Allows you to create one or another generator conditionally on the output of ano
 
 This is an advanced feature. Often, you can use a combination of `Generators.tuple` and `Generator#map` instead:
 
-    >> G.tuple(integer, integer).sample(1, size: 100, rng: Random.new(42)
+    >> G.tuple(G.integer, G.integer).sample(1, size: 100, rng: Random.new(42))
     => [[2, 79]]
 
 #### Generators.one_of
