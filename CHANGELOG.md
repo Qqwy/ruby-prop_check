@@ -1,7 +1,10 @@
+- 1.0.0
+  - Changes:
+    - Pretty-print failures using Ruby's builtin `PP`, so `prop_check` no longer depends on the `awesome_print` gem. (c.f. #19)
 - 0.18.2
   - Documentation updates:
-    - PR #18: Adding an example of using prop_check with the `test-unit` testing framework to the README. Thank you, @niku!
-    - PR #17, #18, #21: fixing typos in various parts of the documentation. Thank you, @meganemura, @niku and @harlantwood!
+    - Adding an example of using prop_check with the `test-unit` testing framework to the README. (c.f. #18, thank you, @niku!)
+    - Fixing typos in various parts of the documentation.  (c.f. #16, #17, #21. Thank you, @meganemura, @niku and @harlantwood!)
 - 0.18.1
   - Fixes:
     - Compatibility with Ruby 3.2:
