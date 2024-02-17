@@ -6,7 +6,7 @@ require "prop_check/version"
 Gem::Specification.new do |spec|
   spec.name          = "prop_check"
   spec.version       = PropCheck::VERSION
-  spec.authors       = ["Qqwy/Wiebe-Marten Wijnja"]
+  spec.authors       = ["Qqwy/Marten Wijnja"]
   spec.email         = ["w-m@wmcode.nl"]
 
   spec.summary       = %q{PropCheck allows you to do property-based testing, including shrinking.}

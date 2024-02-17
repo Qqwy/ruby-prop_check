@@ -14,6 +14,8 @@ It features:
 - Shrinking to a minimal counter-example on failure.
 - Hooks to perform extra set-up/cleanup logic before/after every example case.
 
+It requires _no_ external dependencies, and integrates well with all common test frameworks (see below).
+
 ## What is PropCheck?
 
 PropCheck is a Ruby library to create unit tests which are simpler to write and more powerful when run, finding edge-cases in your code you wouldn't have thought to look for.
@@ -218,16 +220,15 @@ For instance, when a failure happens with the input `x = 100`,
 PropCheck will see if the failure still happens with `x = 50`.
 If it does , it will try `x = 25`. If not, it will try `x = 75`, and so on.
 
-This means if something only goes wrong for `x = 2`, the program will try:
+This means for example that if something only goes for wrong for `x >= 8`, the program will try:
 - `x = 100`(fails),
 - `x = 50`(fails), 
 - `x = 25`(fails), 
 - `x = 12`(fails), 
-- `x = 6`(fails), 
-- `x = 3`(fails), 
-- `x = 1` (succeeds), `x = 2` (fails).
+- `x = 6`(succeeds), `x = 9` (fails)
+- `x = 7`(succeeds), `x = 8` (fails).
 
-and thus the simplified case of `x = 2` is shown in the output.
+and thus the simplified case of `x = 8` is shown in the output.
 
 The documentation of the provided generators explain how they shrink.
 A short summary:
