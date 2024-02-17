@@ -234,7 +234,7 @@ module PropCheck
     end
 
     ##
-    # Generates any nonzerno floating-point number.
+    # Generates any nonzero floating-point number.
     # Will generate special floats (except NaN) from time to time.
     # c.f. #float
     def nonzero_float
@@ -479,7 +479,7 @@ module PropCheck
 
     ##
     #
-    # Alias for `#hash` that does not conflict with a possibly overriden `Object#hash`.
+    # Alias for `#hash` that does not conflict with a possibly overridden `Object#hash`.
     #
     def hash_of(key_generator, value_generator, **kwargs)
       array(tuple(key_generator, value_generator), **kwargs)
