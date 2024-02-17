@@ -1,5 +1,7 @@
 ##
 # @api private
+require 'pp'
+
 module PropCheck::Property::OutputFormatter
   extend self
 
@@ -32,10 +34,13 @@ module PropCheck::Property::OutputFormatter
   end
 
   def print_roots(lazy_tree_val)
-    if lazy_tree_val.is_a?(Array) && lazy_tree_val.length == 1 && lazy_tree_val[0].is_a?(Hash)
-      lazy_tree_val[0].ai
-    else
-      lazy_tree_val.ai
-    end
+    data =
+      if lazy_tree_val.is_a?(Array) && lazy_tree_val.length == 1 && lazy_tree_val[0].is_a?(Hash)
+        lazy_tree_val[0].pp
+      else
+        lazy_tree_val
+      end
+
+    PP.pp(data, '')
   end
 end
