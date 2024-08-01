@@ -12,7 +12,6 @@ module PropCheck
     # - `max_generate_attempts:` The amount of times the library tries a generator in total
     #    before raising `Errors::GeneratorExhaustedError`. c.f. `PropCheck::Generator#where`. (Default: 10_000)
     # - `max_shrink_steps:` The amount of times shrinking is attempted. (Default: 10_000)
-    # - `max_consecutive_attempts:`
     # - `max_consecutive_attempts:` The amount of times the library tries a filtered generator consecutively
     #    again before raising `Errors::GeneratorExhaustedError`. c.f. `PropCheck::Generator#where`. (Default: 10_000)
     # - `default_epoch:` The 'base' value to use for date/time generators like
