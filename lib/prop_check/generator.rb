@@ -55,7 +55,7 @@ module PropCheck
     #   >> Generators.integer.call(size: 1000, rng: Random.new(42))
     #   => 126
     def call(**kwargs)
-      generate(**@@default_kwargs.merge(kwargs)).root
+      generate(**kwargs).root
     end
 
     ##
@@ -63,7 +63,7 @@ module PropCheck
     # This is mostly useful for debugging if a generator behaves as you intend it to.
     def sample(num_of_samples = 10, **kwargs)
       num_of_samples.times.map do
-        call(**@@default_kwargs.merge(kwargs))
+        call(**kwargs)
       end
     end
 
