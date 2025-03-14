@@ -385,8 +385,7 @@ module PropCheck
     end
 
     private def make_array(element_generator, min, count, uniq)
-      amount = min if count < min
-      amount = min if count == min && min != 0
+      amount = min if min > (count - min)
       amount ||= (count - min)
 
       # Simple, optimized implementation:

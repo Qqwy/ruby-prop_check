@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe PropCheck::Generators do
   describe '#date' do
     subject(:date) { described_class.date }
@@ -25,6 +27,23 @@ RSpec.describe PropCheck::Generators do
     it 'produces valid date_times' do
       PropCheck.forall(date_time) do |val|
         expect(val).to be_a(DateTime)
+      end
+    end
+  end
+
+  describe '#array' do
+    it 'produces array that respect the min property' do
+      n_int = described_class.nonnegative_integer
+      PropCheck.forall(n_int) do |val|
+        val += 1 if val == 0
+
+        result = described_class.array(
+          n_int,
+          min: val,
+          empty: false
+        ).sample
+
+        expect(result).to all have_attributes(length: (a_value >= val))
       end
     end
   end
