@@ -1,3 +1,6 @@
+- 1.0.1
+  - Fixes:
+    - The invariants of the of the `min` option for the `array` generator were not checked correctly, sometimes causing arrays with too small lengths to be generated. (c.f. [#26](https://github.com/Qqwy/ruby-prop_check/pull/26). Thank you, @olafura!)
 - 1.0.0
   - Changes:
     - Pretty-print failures using Ruby's builtin `PP`, so `prop_check` no longer depends on the `awesome_print` gem. (c.f. #19)
