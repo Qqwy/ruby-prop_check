@@ -12,13 +12,12 @@ module PropCheck
     # - `max_generate_attempts:` The amount of times the library tries a generator in total
     #    before raising `Errors::GeneratorExhaustedError`. c.f. `PropCheck::Generator#where`. (Default: 10_000)
     # - `max_shrink_steps:` The amount of times shrinking is attempted. (Default: 10_000)
-    # - `max_consecutive_attempts:`
     # - `max_consecutive_attempts:` The amount of times the library tries a filtered generator consecutively
     #    again before raising `Errors::GeneratorExhaustedError`. c.f. `PropCheck::Generator#where`. (Default: 10_000)
     # - `default_epoch:` The 'base' value to use for date/time generators like
     #    `PropCheck::Generators#date` `PropCheck::Generators#future_date` `PropCheck::Generators#time`, etc.
     #    (Default: `DateTime.now`)
-    # - `resize_function` A proc that can be used to resize _all_ generators.
+    # - `resize_function:` A proc that can be used to resize _all_ generators.
     #    Takes the current size as integer and should return a new integer.
     #   (Default: `proc { |size| size }`)
     Configuration = Struct.new(
