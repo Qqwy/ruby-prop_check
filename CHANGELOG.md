@@ -1,3 +1,8 @@
+- 1.0.2
+  - Fixes:
+    - When calling `Generator#sample` or `Generator#call`, the options are now merged with the default options _once_, resulting in a slight speedup. (c.f. [#24](https://github.com/Qqwy/ruby-prop_check/pull/24), thank you, @niku!)
+  - Documentation fixes:
+    - Ordering of Property::Configuration options is now alphabetical. (c.f. [#23](https://github.com/Qqwy/ruby-prop_check/pull/23). Thank you, @niku!)
 - 1.0.1
   - Fixes:
     - The invariants of the of the `min` option for the `array` generator were not checked correctly, sometimes causing arrays with too small lengths to be generated. (c.f. [#26](https://github.com/Qqwy/ruby-prop_check/pull/26). Thank you, @olafura!)
